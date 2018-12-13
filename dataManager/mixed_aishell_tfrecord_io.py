@@ -142,16 +142,19 @@ def _get_waveData1_waveData2(file1, file2):
   f1.close()
   f2.close()
   #!!!!! aishell dataset have zero length wave
+  IFZERO=False
   if len(waveData1) == 0:
-    waveData1 = np.array([0], dtype=np.int16)
+    IFZERO=True
+    waveData1 = np.array([3], dtype=np.int16)
   if len(waveData2) == 0:
+    IFZERO=True
     waveData2 = np.array([3], dtype=np.int16)
   while len(waveData1) < LEN_WAWE_PAD_TO:
     waveData1 = np.tile(waveData1, 2)
   while len(waveData2) < LEN_WAWE_PAD_TO:
     waveData2 = np.tile(waveData2, 2)
 
-  if WAVE_NORM:
+  if WAVE_NORM and not IFZERO:
     waveData1 = waveData1/np.max(np.abs(waveData1)) * 32767
     waveData2 = waveData2/np.max(np.abs(waveData2)) * 32767
   # if len(waveData1) < len(waveData2):
