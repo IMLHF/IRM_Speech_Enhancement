@@ -63,6 +63,30 @@ def librosa_istft(signal_complex, NFFT, overlap):
   return tmp
 
 
+def griffin_lim(spec, NFFT, overlap, max_iter):
+  y = np.random.random(np.shape(librosa.core.istft(spec,
+                                                   win_length=NFFT,
+                                                   hop_length=NFFT-overlap,
+                                                   window=scipy.signal.windows.hann)))*32767
+
+  for i in range(max_iter-1):
+    stft_matrix = librosa.core.stft(y,
+                                    n_fft=NFFT,
+                                    hop_length=NFFT-overlap,
+                                    window=scipy.signal.windows.hann)
+    stft_matrix = spec * stft_matrix / np.abs(stft_matrix)
+    y = librosa.core.istft(stft_matrix,
+                           win_length=NFFT,
+                           hop_length=NFFT-overlap,
+                           window=scipy.signal.windows.hann)
+
+  stft_matrix = librosa.core.stft(y,
+                                  n_fft=NFFT,
+                                  hop_length=NFFT-overlap,
+                                  window=scipy.signal.windows.hann)
+  stft_matrix = spec * stft_matrix / np.abs(stft_matrix)
+  return stft_matrix.T
+
 '''
 def magnitude_spectrum_sci_stft(signal, fs, NFFT=512, overlap=256):
   f, t, mag_frames = np.absolute(scipy.signal.stft(signal,

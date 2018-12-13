@@ -222,15 +222,15 @@ def parse_func(example_proto):
                                            dtype=tf.float32),
       'labels': tf.FixedLenSequenceFeature(shape=[NNET_PARAM.OUTPUT_SIZE],
                                            dtype=tf.float32),
-      # 'xtheta': tf.FixedLenSequenceFeature(shape=[NNET_PARAM.INPUT_SIZE],
-      #                                      dtype=tf.float32),
-      # 'ytheta': tf.FixedLenSequenceFeature(shape=[NNET_PARAM.OUTPUT_SIZE],
-      #                                      dtype=tf.float32),
+      'xtheta': tf.FixedLenSequenceFeature(shape=[NNET_PARAM.INPUT_SIZE],
+                                           dtype=tf.float32),
+      'ytheta': tf.FixedLenSequenceFeature(shape=[NNET_PARAM.OUTPUT_SIZE],
+                                           dtype=tf.float32),
   }
   _, sequence = tf.parse_single_sequence_example(
       example_proto, sequence_features=sequence_features)
   length = tf.shape(sequence['inputs'])[0]
-  return sequence['inputs'], sequence['labels1'], sequence['labels2'], None, None, length
+  return sequence['inputs'], sequence['labels'], 0, 0, length
 
 
 def parse_func_with_theta(example_proto):
@@ -362,15 +362,16 @@ def generate_tfrecord(gen=True):
 
 def get_batch_use_tfdata(tfrecords_list, get_theta=False):
   files = tf.data.Dataset.list_files(tfrecords_list)
+  files = files.take(MIXED_AISHELL_PARAM.MAX_TFRECORD_FILES)
   if MIXED_AISHELL_PARAM.SHUFFLE:
     files = files.shuffle(MIXED_AISHELL_PARAM.PROCESS_NUM_GENERATE_TFERCORD)
-  if MIXED_AISHELL_PARAM.TFRECORDS_FILE_TYPE == 'big' and (not MIXED_AISHELL_PARAM.SHUFFLE):
+  if not MIXED_AISHELL_PARAM.SHUFFLE:
     dataset = files.interleave(tf.data.TFRecordDataset,
                                cycle_length=1,
                                block_length=NNET_PARAM.batch_size,
                                #  num_parallel_calls=1,
                                )
-  else:  # small tfrecord or shuffle
+  else: # shuffle
     dataset = files.interleave(tf.data.TFRecordDataset,
                                cycle_length=NNET_PARAM.batch_size*3,
                                #  block_length=1,

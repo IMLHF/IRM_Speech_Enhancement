@@ -6,6 +6,7 @@ import sys
 from tensorflow.contrib.rnn.python.ops import rnn
 from FLAGS import NNET_PARAM
 from utils import tf_tool
+from losses import loss
 
 
 class SE_MODEL(object):
@@ -85,7 +86,7 @@ class SE_MODEL(object):
       if self._model_type.upper()[0] == 'B':  # bidirection
         outputs = tf.reshape(outputs, [-1, 2*NNET_PARAM.RNN_SIZE])
         in_size = 2*NNET_PARAM.RNN_SIZE
-      out_size = NNET_PARAM.OUT_SIZE
+      out_size = NNET_PARAM.OUTPUT_SIZE
       weights = tf.get_variable('weights1', [in_size, out_size],
                                 initializer=tf.random_normal_initializer(stddev=0.01))
       biases = tf.get_variable('biases1', [out_size],
@@ -103,7 +104,7 @@ class SE_MODEL(object):
     if NNET_PARAM.MASK_TYPE == 'PSIRM':
       self._labels *= tf.cos(theta_x_batch-theta_y_batch)
 
-    self._loss = tf.losses.mean_squared_error(self._labels,self._cleaned)
+    self._loss = loss.reduce_sum_frame_batchsize_MSE(self.cleaned,self.labels)
 
     if tf.get_variable_scope().reuse:
       return

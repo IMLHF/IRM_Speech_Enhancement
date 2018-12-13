@@ -24,13 +24,28 @@ class NNET_PARAM:
   end_halving_impr = 0.0005
   # The num of threads to read tfrecords files.
   num_threads_processing_data = 64
+  RESTORE_PHASE = 'GRIFFIN_LIM'  # 'MIXED','CLEANED','GRIFFIN_LIM'
+  GRIFFIN_ITERNUM = 50
+
+  GPU_RAM_ALLOW_GROWTH = True
+  USE_MULTIGPU = False  # dont't use multiGPU,because it is not work now...
+  GPU_LIST = [0, 2]
+  if USE_MULTIGPU:
+    if batch_size % len(GPU_LIST) == 0:
+      batch_size //= len(GPU_LIST)
+    else:
+      print('Batch_size %d cannot divided by gpu num %d.' %
+            (batch_size, len(GPU_LIST)))
+      exit(-1)
+
+  minibatch_size = 400  # batch num to show
 
 
 class MIXED_AISHELL_PARAM:
   # rawdata, dirs by speakerid, like "....data_aishell/wav/train".
   RAW_DATA = '/home/student/work/pit_test/data'
   DATA_DICT_DIR = '_data/mixed_aishell'
-  GENERATE_TFRECORD = True
+  GENERATE_TFRECORD = False
   PROCESS_NUM_GENERATE_TFERCORD = 64
   SHUFFLE = False
 
@@ -50,3 +65,5 @@ class MIXED_AISHELL_PARAM:
   NFFT = 512
   OVERLAP = 256
   FS = 16000
+
+  MAX_TFRECORD_FILES=32 # 64
