@@ -6,15 +6,193 @@ import utils
 import os
 import shutil
 from models.lstm_SE import SE_MODEL
+import wave
+from dataManager import mixed_aishell_tfrecord_io as wav_tool
+from dataManager.mixed_aishell_tfrecord_io import rmNormalization
 from FLAGS import NNET_PARAM
 from FLAGS import MIXED_AISHELL_PARAM
 from dataManager.mixed_aishell_tfrecord_io import generate_tfrecord, get_batch_use_tfdata
 
+os.environ['CUDA_VISIBLE_DEVICES'] = sys.argv[1]
+
+
+def show_onewave(decode_ans_dir, name, x_spec, y_spec, x_angle, y_angle, cleaned):
+  # show the 5 data.(wav,spec,sound etc.)
+  x_spec = np.array(rmNormalization(x_spec))
+  cleaned = np.array(rmNormalization(cleaned))
+  # 去噪阈值 #TODO
+  # cleaned = np.where(cleaned > 300, cleaned, cleaned/10)
+  y_spec = np.array(rmNormalization(y_spec))
+
+  # wav_spec(spectrum)
+  utils.spectrum_tool.picture_spec(np.log10(cleaned+0.001),
+                                   decode_ans_dir+'/restore_spec_'+name)
+  utils.spectrum_tool.picture_spec(np.log10(x_spec+0.001),
+                                   decode_ans_dir+'/mixed_spec_'+name)
+  if NNET_PARAM.decode_show_more:
+    utils.spectrum_tool.picture_spec(np.log10(y_spec+0.001),
+                                     decode_ans_dir+'/raw_spec_'+name)
+
+  cleaned_spec = cleaned * np.exp(y_angle*1j)
+  if NNET_PARAM.RESTORE_PHASE == 'CLEANED':
+    y_spec = y_spec * np.exp(y_angle*1j)
+  elif NNET_PARAM.RESTORE_PHASE == 'MIXED':
+    y_spec = y_spec * np.exp(x_angle*1j)
+  elif NNET_PARAM.RESTORE_PHASE == 'GRIFFIN_LIM':
+    y_spec = utils.spectrum_tool.griffin_lim(y_spec.T,
+                                             MIXED_AISHELL_PARAM.NFFT,
+                                             MIXED_AISHELL_PARAM.OVERLAP,
+                                             NNET_PARAM.GRIFFIN_ITERNUM)
+  x_spec = x_spec * np.exp(x_angle*1j)
+
+  reY = utils.spectrum_tool.librosa_istft(
+      cleaned_spec.T, MIXED_AISHELL_PARAM.NFFT, MIXED_AISHELL_PARAM.OVERLAP)
+  # norm resotred wave
+  if NNET_PARAM.decode_output_norm_speaker_volume:
+    reY = reY/np.max(np.abs(reY)) * 32767
+  reCONY = reY
+  wavefile = wave.open(
+      decode_ans_dir+'/restore_audio_'+name+'.wav', 'wb')
+  nchannels = 1
+  sampwidth = 2  # 采样位宽，2表示16位
+  framerate = 16000
+  nframes = len(reCONY)
+  comptype = "NONE"
+  compname = "not compressed"
+  wavefile.setparams((nchannels, sampwidth, framerate, nframes,
+                      comptype, compname))
+  wavefile.writeframes(
+      np.array(reCONY, dtype=np.int16))
+
+  # write raw wave
+  if NNET_PARAM.decode_show_more:
+    rawY = utils.spectrum_tool.librosa_istft(
+        y_spec.T, MIXED_AISHELL_PARAM.NFFT, MIXED_AISHELL_PARAM.OVERLAP)
+    rawCONY = rawY
+    wavefile = wave.open(
+        decode_ans_dir+'/raw_audio_'+name+'.wav', 'wb')
+    nframes = len(rawCONY)
+    wavefile.setparams((nchannels, sampwidth, framerate, nframes,
+                        comptype, compname))
+    wavefile.writeframes(
+        np.array(rawCONY, dtype=np.int16))
+
+  # write mixed wave
+  mixedWave = utils.spectrum_tool.librosa_istft(
+      x_spec.T, MIXED_AISHELL_PARAM.NFFT, MIXED_AISHELL_PARAM.OVERLAP)
+  wavefile = wave.open(
+      decode_ans_dir+'/mixed_audio_'+name+'.wav', 'wb')
+  nframes = len(mixedWave)
+  wavefile.setparams((nchannels, sampwidth, framerate, nframes,
+                      comptype, compname))
+  wavefile.writeframes(
+      np.array(mixedWave, dtype=np.int16))
+
+  # wav_pic(oscillograph)
+  utils.spectrum_tool.picture_wave(reCONY,
+                                   decode_ans_dir +
+                                   '/restore_wav_'+name,
+                                   16000)
+  if NNET_PARAM.decode_show_more:
+    utils.spectrum_tool.picture_wave(rawCONY,
+                                     decode_ans_dir +
+                                     '/raw_wav_' + name,
+                                     16000)
+
+
+def decode_oneset(setname, set_index_list_dir, ckpt_dir='nnet'):
+  dataset_index_file = open(set_index_list_dir, 'r')
+  dataset_index_strlist = dataset_index_file.readlines()
+  if len(dataset_index_strlist) <= 0:
+    print('Set %s have no element.' % setname)
+    return
+  x_spec = []
+  y_spec = []
+  x_theta = []
+  y_theta = []
+  lengths = []
+  for i, index_str in enumerate(dataset_index_strlist):
+    uttdir1, uttdir2 = index_str.replace('\n', '').split(' ')
+    # print(uttdir1,uttdir2)
+    uttwave1, uttwave2 = wav_tool._get_waveData1_waveData2(uttdir1, uttdir2)
+    if NNET_PARAM.decode_input_norm_speaker_volume:
+      uttwave1 = uttwave1/np.max(np.abs(uttwave1)) * 32767
+      uttwave2 = uttwave2/np.max(np.abs(uttwave2)) * 32767
+    noise_rate = np.random.random()*MIXED_AISHELL_PARAM.MAX_NOISE_RATE
+    mixed_wave_t = wav_tool._mix_wav(uttwave1, uttwave2*noise_rate)
+    x_spec_t = wav_tool._extract_norm_log_mag_spec(mixed_wave_t)
+    y_spec_t = wav_tool._extract_norm_log_mag_spec(uttwave1)
+    x_theta_t = wav_tool._extract_phase(mixed_wave_t)
+    y_theta_t = wav_tool._extract_phase(uttwave1)
+    x_spec.append(x_spec_t)
+    y_spec.append(y_spec_t)
+    x_theta.append(x_theta_t)
+    y_theta.append(y_theta_t)
+    lengths.append(np.shape(x_spec_t)[0])
+  x_spec = np.array(x_spec, dtype=np.float32)
+  y_spec = np.array(y_spec, dtype=np.float32)
+  x_theta = np.array(x_theta, dtype=np.float32)
+  y_theta = np.array(y_theta, dtype=np.float32)
+  lengths = np.array(lengths, dtype=np.int32)
+
+  g = tf.Graph()
+  with g.as_default():
+    with tf.device('/cpu:0'):
+      with tf.name_scope('input'):
+        dataset = tf.data.Dataset.from_tensor_slices(
+            (x_spec, y_spec, x_theta, y_theta, lengths))
+        dataset = dataset.batch(64)
+        dataset_iter = dataset.make_one_shot_iterator()
+        # dataset_iter = dataset.make_initializable_iterator()
+        x_batch, y_batch, x_theta_batch, y_theta_batch, lengths_batch = dataset_iter.get_next()
+
+    with tf.name_scope('model'):
+      model = SE_MODEL(x_batch, y_batch, x_theta_batch, y_theta_batch,
+                       lengths_batch, infer=True)
+
+    init = tf.group(tf.global_variables_initializer(),
+                    tf.local_variables_initializer())
+
+    config = tf.ConfigProto()
+    config.gpu_options.allow_growth = True
+    config.allow_soft_placement = True
+    sess = tf.Session(config=config)
+    sess.run(init)
+
+    ckpt = tf.train.get_checkpoint_state(
+        os.path.join(NNET_PARAM.save_dir, ckpt_dir))
+    if ckpt and ckpt.model_checkpoint_path:
+      tf.logging.info("Restore from " + ckpt.model_checkpoint_path)
+      model.saver.restore(sess, ckpt.model_checkpoint_path)
+    else:
+      tf.logging.fatal("checkpoint not found.")
+      sys.exit(-1)
+  g.finalize()
+
+  cleaned = sess.run([model.cleaned])
+  decode_num = np.shape(x_spec)[0]
+  decode_ans_dir = os.path.join(
+      NNET_PARAM.save_dir, 'decode_ans', setname)
+  if os.path.exists(decode_ans_dir):
+    shutil.rmtree(decode_ans_dir)
+  os.makedirs(decode_ans_dir)
+  for i in range(decode_num):
+    show_onewave(decode_ans_dir, str(i), x_spec[i], y_spec[i], x_theta[i], y_theta[i],
+                 cleaned[i])
+  sess.close()
+  tf.logging.info("Decoding done.")
+
 
 def decode():
-  pass
+  set_list = os.listdir('_decode_index')
+  for list_file in set_list:
+    if list_file[-4:] == 'list':
+      # print(list_file)
+      decode_oneset(
+          list_file[:-5], os.path.join('_decode_index', list_file), ckpt_dir='nnet')
 
-def train_one_epoch(sess, tr_model, i_epoch, run_metadata):
+
+def train_one_epoch(sess, tr_model):
   """Runs the model one epoch on given data."""
   tr_loss, i = 0, 0
   stime = time.time()
@@ -39,7 +217,7 @@ def train_one_epoch(sess, tr_model, i_epoch, run_metadata):
   return tr_loss
 
 
-def eval_one_epoch(sess, val_model, run_metadata):
+def eval_one_epoch(sess, val_model):
   """Cross validate the model on given data."""
   val_loss = 0
   data_len = 0
@@ -47,6 +225,8 @@ def eval_one_epoch(sess, val_model, run_metadata):
     try:
       loss, current_batchsize = sess.run(
           [val_model.loss, val_model.batch_size])
+      # print(inputss)
+      # exit(0)
       val_loss += loss
       data_len += current_batchsize
     except tf.errors.OutOfRangeError:
@@ -67,26 +247,26 @@ def train():
             gen=MIXED_AISHELL_PARAM.GENERATE_TFRECORD)
         if MIXED_AISHELL_PARAM.GENERATE_TFRECORD:
           exit(0)  # set gen=True and exit to generate tfrecords
-        x_batch_tr, y1_batch_tr, y2_batch_tr, Xtheta_batch_tr, Ytheta_batch_tr, lengths_batch_tr, iter_train = get_batch_use_tfdata(
+
+        PSIRM= True if NNET_PARAM.MASK_TYPE=='PSIRM' else False
+        x_batch_tr, y_batch_tr, Xtheta_batch_tr, Ytheta_batch_tr, lengths_batch_tr, iter_train = get_batch_use_tfdata(
             train_tfrecords,
-            get_theta=False)
-        x_batch_val, y1_batch_val, y2_batch_val, Xtheta_batch_val, Ytheta_batch_val, lengths_batch_val, iter_val = get_batch_use_tfdata(
+            get_theta=PSIRM)
+        x_batch_val, y_batch_val,  Xtheta_batch_val, Ytheta_batch_val, lengths_batch_val, iter_val = get_batch_use_tfdata(
             val_tfrecords,
-            get_theta=False)
+            get_theta=PSIRM)
     # endregion
 
     # build model
     with tf.name_scope('model'):
       tr_model = SE_MODEL(x_batch_tr,
-                          y1_batch_tr,
-                          y2_batch_tr,
+                          y_batch_tr,
                           lengths_batch_tr,
                           Xtheta_batch_tr,
                           Ytheta_batch_tr)
       tf.get_variable_scope().reuse_variables()
       val_model = SE_MODEL(x_batch_val,
-                           y1_batch_val,
-                           y2_batch_val,
+                           y_batch_val,
                            lengths_batch_val,
                            Xtheta_batch_val,
                            Ytheta_batch_val)
@@ -115,20 +295,11 @@ def train():
       if os.path.exists(os.path.join(NNET_PARAM.SAVE_DIR, 'train.log')):
         os.remove(os.path.join(NNET_PARAM.SAVE_DIR, 'train.log'))
 
-    # prepare run_metadata for timeline
-    run_metadata = None
-    if NNET_PARAM.time_line:
-      run_metadata = tf.RunMetadata()
-      if os.path.exists('_timeline'):
-        shutil.rmtree('_timeline')
-      os.mkdir('_timeline')
-
     # validation before training.
     valstart_time = time.time()
     sess.run(iter_val.initializer)
     loss_prev = eval_one_epoch(sess,
-                               val_model,
-                               run_metadata)
+                               val_model)
     tf.logging.info("CROSSVAL PRERUN AVG.LOSS %.4F  costime %dS" %
                     (loss_prev, time.time()-valstart_time))
 
@@ -143,14 +314,11 @@ def train():
 
       # train one epoch
       tr_loss = train_one_epoch(sess,
-                                tr_model,
-                                epoch,
-                                run_metadata)
+                                tr_model)
 
       # Validation
       val_loss = eval_one_epoch(sess,
-                                val_model,
-                                run_metadata)
+                                val_model)
 
       end_time = time.time()
 
@@ -189,7 +357,7 @@ def train():
         f.writelines(msg+'\n')
 
       # Start halving when improvement is lower than start_halving_impr
-      if (rel_impr < NNET_PARAM.start_halving_impr) or (reject_num >= 3):
+      if (rel_impr < NNET_PARAM.start_halving_impr) or (reject_num >= 2):
         reject_num = 0
         NNET_PARAM.learning_rate *= NNET_PARAM.halving_factor
         tr_model.assign_lr(sess, NNET_PARAM.learning_rate)
