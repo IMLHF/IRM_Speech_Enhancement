@@ -160,7 +160,7 @@ def decode_oneset(setname, set_index_list_dir, ckpt_dir='nnet'):
     sess.run(init)
 
     ckpt = tf.train.get_checkpoint_state(
-        os.path.join(NNET_PARAM.save_dir, ckpt_dir))
+        os.path.join(NNET_PARAM.SAVE_DIR, ckpt_dir))
     if ckpt and ckpt.model_checkpoint_path:
       tf.logging.info("Restore from " + ckpt.model_checkpoint_path)
       model.saver.restore(sess, ckpt.model_checkpoint_path)
@@ -172,7 +172,7 @@ def decode_oneset(setname, set_index_list_dir, ckpt_dir='nnet'):
   cleaned = sess.run([model.cleaned])
   decode_num = np.shape(x_spec)[0]
   decode_ans_dir = os.path.join(
-      NNET_PARAM.save_dir, 'decode_ans', setname)
+      NNET_PARAM.SAVE_DIR, 'decode_ans', setname)
   if os.path.exists(decode_ans_dir):
     shutil.rmtree(decode_ans_dir)
   os.makedirs(decode_ans_dir)
@@ -353,7 +353,7 @@ def train():
             epoch + 1, tr_loss, NNET_PARAM.learning_rate, val_loss,
             "NNET Rejected", ckpt_name, end_time - start_time)
         tf.logging.info(msg)
-      with open(os.path.join(NNET_PARAM.save_dir, 'train.log'), 'a+') as f:
+      with open(os.path.join(NNET_PARAM.SAVE_DIR, 'train.log'), 'a+') as f:
         f.writelines(msg+'\n')
 
       # Start halving when improvement is lower than start_halving_impr
