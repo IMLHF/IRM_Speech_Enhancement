@@ -2,7 +2,8 @@ class NNET_PARAM:
   INPUT_SIZE = 257
   OUTPUT_SIZE = 257
   MODEL_TYPE = 'BLSTM'  # 'BLSTM' or 'BGRU'
-  RNN_SIZE = 600
+  LSTM_num_proj = 128
+  RNN_SIZE = 512
   LSTM_ACTIVATION = 'tanh'
   KEEP_PROB = 0.8
   RNN_LAYER = 2
@@ -10,7 +11,7 @@ class NNET_PARAM:
   CLIP_NORM = 5.0
   SAVE_DIR = 'exp/rnn_irm'
   decode = False
-  batch_size = 256
+  batch_size = 128
   learning_rate = 0.001
   start_halving_impr = 0.0003
   resume_training = 'false'
@@ -43,22 +44,25 @@ class NNET_PARAM:
 
 class MIXED_AISHELL_PARAM:
   # rawdata, dirs by speakerid, like "....data_aishell/wav/train".
+  # RAW_DATA = '/aishell_90_speaker' # for docker
   RAW_DATA = '/home/student/work/pit_test/data'
   DATA_DICT_DIR = '_data/mixed_aishell'
-  GENERATE_TFRECORD = False
-  PROCESS_NUM_GENERATE_TFERCORD = 64
+  GENERATE_TFRECORD = True
+  PROCESS_NUM_GENERATE_TFERCORD = 16
+  TFRECORDS_NUM = 320
   SHUFFLE = False
 
-  # TFRECORDS_DIR = '/workspace/alldata/pit-data/feature_tfrecords_utt03s_big' # for docker
-  TFRECORDS_DIR = '/fast2/tmplhf/pit-data/feature_tfrecords_utt03s_big_3_6'
+  # TFRECORDS_DIR = '/feature_tfrecords_utt03s_irm' # for docker
+  TFRECORDS_DIR = '/home/student/work/lhf/alldata/irm-data/feature_tfrecords_utt03s_irm'
   # 'big' or 'small'.if 'small', one file per record.
   LEN_WAWE_PAD_TO = 16000*3  # Mixed wave length (16000*3 is 3 seconds)
   UTT_SEG_FOR_MIX = [260, 290]  # Separate utt to [0:260],[260,290],[290:end]
   DATASET_NAMES = ['train', 'validation', 'test_cc']
-  DATASET_SIZES = [1400000, 18000, 180000]
+  DATASET_SIZES = [700000, 18000, 180000]
 
   WAVE_NORM = True
-  MAX_NOISE_RATE = 0.7  # wave_norm + noise_rate
+  MAX_NOISE_RATE = 1.0  # wave_norm + noise_rate
+  NOISE_DIR = '/home/student/work/lhf/noise_lhf'
   # WAVE_NORM = False
   LOG_NORM_MAX = 6
   LOG_NORM_MIN = -3
@@ -66,4 +70,4 @@ class MIXED_AISHELL_PARAM:
   OVERLAP = 256
   FS = 16000
 
-  MAX_TFRECORD_FILES=32 # 64
+  MAX_TFRECORD_FILES=320 # 640

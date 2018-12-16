@@ -30,6 +30,7 @@ class SE_MODEL(object):
     def lstm_cell():
       return tf.contrib.rnn.LSTMCell(
           NNET_PARAM.RNN_SIZE, forget_bias=1.0, use_peepholes=True,
+          num_proj=NNET_PARAM.LSTM_num_proj,
           initializer=tf.contrib.layers.xavier_initializer(),
           state_is_tuple=True, activation=NNET_PARAM.LSTM_ACTIVATION)
     lstm_attn_cell = lstm_cell
@@ -84,8 +85,8 @@ class SE_MODEL(object):
 
     with tf.variable_scope('fullconnectOut'):
       if self._model_type.upper()[0] == 'B':  # bidirection
-        outputs = tf.reshape(outputs, [-1, 2*NNET_PARAM.RNN_SIZE])
-        in_size = 2*NNET_PARAM.RNN_SIZE
+        outputs = tf.reshape(outputs, [-1, 2*NNET_PARAM.LSTM_num_proj])
+        in_size = 2*NNET_PARAM.LSTM_num_proj
       out_size = NNET_PARAM.OUTPUT_SIZE
       weights = tf.get_variable('weights1', [in_size, out_size],
                                 initializer=tf.random_normal_initializer(stddev=0.01))
