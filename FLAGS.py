@@ -47,7 +47,7 @@ class MIXED_AISHELL_PARAM:
   # RAW_DATA = '/aishell_90_speaker' # for docker
   RAW_DATA = '/home/student/work/pit_test/data'
   DATA_DICT_DIR = '_data/mixed_aishell'
-  GENERATE_TFRECORD = True
+  GENERATE_TFRECORD = False
   PROCESS_NUM_GENERATE_TFERCORD = 16
   TFRECORDS_NUM = 320
   SHUFFLE = False

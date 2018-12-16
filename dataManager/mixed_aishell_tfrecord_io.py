@@ -326,6 +326,7 @@ def generate_tfrecord(gen=True):
       start_time = time.time()
       dataset_index_list = None
       if dataset_dir[-2:] == 'in':
+        # continue
         dataset_index_list = scipy.io.loadmat(
             '_data/mixed_aishell/train/mixed_wav_dir.mat')["mixed_wav_dir"]
       elif dataset_dir[-2:] == 'on':
@@ -345,7 +346,7 @@ def generate_tfrecord(gen=True):
       for i_process in range(TFRECORDS_NUM):
         s_site = i_process*minprocess_utt_num
         e_site = s_site+minprocess_utt_num
-        if i_process == (PROCESS_NUM_GENERATE_TFERCORD-1):
+        if i_process == (TFRECORDS_NUM-1):
           e_site = len_dataset
         # print(s_site,e_site)
         pool.apply_async(_gen_tfrecord_minprocess,
@@ -373,7 +374,7 @@ def generate_tfrecord(gen=True):
   return train_set, val_set, testcc_set
 
 
-def get_batch_use_tfdata2(tfrecords_list, get_theta=False):
+def get_batch_use_tfdata(tfrecords_list, get_theta=False):
   files = tf.data.Dataset.list_files(tfrecords_list)
   files = files.take(MIXED_AISHELL_PARAM.MAX_TFRECORD_FILES)
   if MIXED_AISHELL_PARAM.SHUFFLE:
@@ -417,7 +418,7 @@ def get_batch_use_tfdata2(tfrecords_list, get_theta=False):
   return x_batch, y_batch, xtheta, ytheta, lengths_batch, dataset_iter
 
 
-def get_batch_use_tfdata(tfrecords_list, get_theta=False):
+def _get_batch_use_tfdata(tfrecords_list, get_theta=False):
   files = os.listdir(tfrecords_list[:-11])
   files = files[:min(MIXED_AISHELL_PARAM.MAX_TFRECORD_FILES, len(files))]
   files = [os.path.join(tfrecords_list[:-11], file) for file in files]
@@ -425,7 +426,7 @@ def get_batch_use_tfdata(tfrecords_list, get_theta=False):
                                                     num_parallel_calls=NNET_PARAM.num_threads_processing_data) for file in files]
 
   num_classes = MIXED_AISHELL_PARAM.MAX_TFRECORD_FILES
-  num_classes_per_batch = MIXED_AISHELL_PARAM.MAX_TFRECORD_FILES
+  num_classes_per_batch = NNET_PARAM.batch_size
   num_utt_per_class = NNET_PARAM.batch_size//num_classes_per_batch
 
   def generator(_):
