@@ -15,6 +15,9 @@ from dataManager.mixed_aishell_tfrecord_io import generate_tfrecord, get_batch_u
 
 os.environ['CUDA_VISIBLE_DEVICES'] = sys.argv[1]
 
+def decode_testSet_get_SDR_Impr():
+  pass
+
 
 def show_onewave(decode_ans_dir, name, x_spec, y_spec, x_angle, y_angle, cleaned):
   # show the 5 data.(wav,spec,sound etc.)
@@ -185,7 +188,7 @@ def decode_oneset(setname, set_index_list_dir, ckpt_dir='nnet'):
   tf.logging.info("Decoding done.")
 
 
-def decode():
+def decode_by_index():
   set_list = os.listdir('_decode_index')
   for list_file in set_list:
     if list_file[-4:] == 'list':
@@ -384,7 +387,10 @@ def main(_):
   if not os.path.exists(NNET_PARAM.SAVE_DIR):
     os.makedirs(NNET_PARAM.SAVE_DIR)
   if NNET_PARAM.decode:
-    decode()
+    if NNET_PARAM.decode == 1:
+      decode_by_index()
+    else:
+      decode_testSet_get_SDR_Impr()
   else:
     train()
 
