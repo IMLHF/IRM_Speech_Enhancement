@@ -29,9 +29,8 @@ def show_onewave(decode_ans_dir, name, x_spec, y_spec, x_angle, y_angle, cleaned
                                    decode_ans_dir+'/restore_spec_'+name)
   utils.spectrum_tool.picture_spec(np.log10(x_spec+0.001),
                                    decode_ans_dir+'/mixed_spec_'+name)
-  if NNET_PARAM.decode_show_more:
-    utils.spectrum_tool.picture_spec(np.log10(y_spec+0.001),
-                                     decode_ans_dir+'/raw_spec_'+name)
+  utils.spectrum_tool.picture_spec(np.log10(y_spec+0.001),
+                                   decode_ans_dir+'/raw_spec_'+name)
 
   cleaned_spec = cleaned * np.exp(y_angle*1j)
   if NNET_PARAM.RESTORE_PHASE == 'CLEANED':
@@ -65,17 +64,16 @@ def show_onewave(decode_ans_dir, name, x_spec, y_spec, x_angle, y_angle, cleaned
       np.array(reCONY, dtype=np.int16))
 
   # write raw wave
-  if NNET_PARAM.decode_show_more:
-    rawY = utils.spectrum_tool.librosa_istft(
-        y_spec.T, MIXED_AISHELL_PARAM.NFFT, MIXED_AISHELL_PARAM.OVERLAP)
-    rawCONY = rawY
-    wavefile = wave.open(
-        decode_ans_dir+'/raw_audio_'+name+'.wav', 'wb')
-    nframes = len(rawCONY)
-    wavefile.setparams((nchannels, sampwidth, framerate, nframes,
-                        comptype, compname))
-    wavefile.writeframes(
-        np.array(rawCONY, dtype=np.int16))
+  rawY = utils.spectrum_tool.librosa_istft(
+      y_spec.T, MIXED_AISHELL_PARAM.NFFT, MIXED_AISHELL_PARAM.OVERLAP)
+  rawCONY = rawY
+  wavefile = wave.open(
+      decode_ans_dir+'/raw_audio_'+name+'.wav', 'wb')
+  nframes = len(rawCONY)
+  wavefile.setparams((nchannels, sampwidth, framerate, nframes,
+                      comptype, compname))
+  wavefile.writeframes(
+      np.array(rawCONY, dtype=np.int16))
 
   # write mixed wave
   mixedWave = utils.spectrum_tool.librosa_istft(
@@ -93,11 +91,10 @@ def show_onewave(decode_ans_dir, name, x_spec, y_spec, x_angle, y_angle, cleaned
                                    decode_ans_dir +
                                    '/restore_wav_'+name,
                                    16000)
-  if NNET_PARAM.decode_show_more:
-    utils.spectrum_tool.picture_wave(rawCONY,
-                                     decode_ans_dir +
-                                     '/raw_wav_' + name,
-                                     16000)
+  utils.spectrum_tool.picture_wave(rawCONY,
+                                   decode_ans_dir +
+                                   '/raw_wav_' + name,
+                                   16000)
 
 
 def decode_oneset(setname, set_index_list_dir, ckpt_dir='nnet'):
@@ -115,9 +112,6 @@ def decode_oneset(setname, set_index_list_dir, ckpt_dir='nnet'):
     uttdir1, uttdir2 = index_str.replace('\n', '').split(' ')
     # print(uttdir1,uttdir2)
     uttwave1, uttwave2 = wav_tool._get_waveData1_waveData2(uttdir1, uttdir2)
-    if NNET_PARAM.decode_input_norm_speaker_volume:
-      uttwave1 = uttwave1/np.max(np.abs(uttwave1)) * 32767
-      uttwave2 = uttwave2/np.max(np.abs(uttwave2)) * 32767
     noise_rate = np.random.random()*MIXED_AISHELL_PARAM.MAX_NOISE_RATE
     mixed_wave_t = wav_tool._mix_wav(uttwave1, uttwave2*noise_rate)
     x_spec_t = wav_tool._extract_norm_log_mag_spec(mixed_wave_t)
@@ -141,14 +135,14 @@ def decode_oneset(setname, set_index_list_dir, ckpt_dir='nnet'):
       with tf.name_scope('input'):
         dataset = tf.data.Dataset.from_tensor_slices(
             (x_spec, y_spec, x_theta, y_theta, lengths))
-        dataset = dataset.batch(64)
+        dataset = dataset.batch(NNET_PARAM.batch_size)
         dataset_iter = dataset.make_one_shot_iterator()
         # dataset_iter = dataset.make_initializable_iterator()
         x_batch, y_batch, x_theta_batch, y_theta_batch, lengths_batch = dataset_iter.get_next()
 
     with tf.name_scope('model'):
-      model = SE_MODEL(x_batch, y_batch, x_theta_batch, y_theta_batch,
-                       lengths_batch, infer=True)
+      model = SE_MODEL(x_batch, y_batch, lengths_batch, x_theta_batch, y_theta_batch,
+                       infer=True)
 
     init = tf.group(tf.global_variables_initializer(),
                     tf.local_variables_initializer())
@@ -169,16 +163,24 @@ def decode_oneset(setname, set_index_list_dir, ckpt_dir='nnet'):
       sys.exit(-1)
   g.finalize()
 
-  cleaned = sess.run([model.cleaned])
-  decode_num = np.shape(x_spec)[0]
   decode_ans_dir = os.path.join(
       NNET_PARAM.SAVE_DIR, 'decode_ans', setname)
   if os.path.exists(decode_ans_dir):
     shutil.rmtree(decode_ans_dir)
   os.makedirs(decode_ans_dir)
-  for i in range(decode_num):
-    show_onewave(decode_ans_dir, str(i), x_spec[i], y_spec[i], x_theta[i], y_theta[i],
-                 cleaned[i])
+
+  data_len = np.shape(x_spec)[0]
+  total_batch = data_len // NNET_PARAM.batch_size if data_len % NNET_PARAM.batch_size == 0 else (
+      data_len // NNET_PARAM.batch_size)+1
+  for i_batch in range(total_batch):
+    cleaned = sess.run([model.cleaned])
+    cleaned = np.squeeze(cleaned)
+    s_site = i_batch*NNET_PARAM.batch_size
+    e_site = min(s_site+NNET_PARAM.batch_size, data_len)
+    for i in range(s_site, e_site):
+      show_onewave(decode_ans_dir, str(i), x_spec[i], y_spec[i], x_theta[i], y_theta[i],
+                   cleaned[i-s_site])
+
   sess.close()
   tf.logging.info("Decoding done.")
 
@@ -248,7 +250,7 @@ def train():
         if MIXED_AISHELL_PARAM.GENERATE_TFRECORD:
           exit(0)  # set gen=True and exit to generate tfrecords
 
-        PSIRM= True if NNET_PARAM.MASK_TYPE=='PSIRM' else False
+        PSIRM = True if NNET_PARAM.MASK_TYPE == 'PSIRM' else False
         x_batch_tr, y_batch_tr, Xtheta_batch_tr, Ytheta_batch_tr, lengths_batch_tr, iter_train = get_batch_use_tfdata(
             train_tfrecords,
             get_theta=PSIRM)

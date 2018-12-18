@@ -10,7 +10,8 @@ def picture_spec(spec,name):
   # for i in range(np.shape(spec)[0]):
     # spec_t=spec[i]
   spec_t=spec
-  plt.pcolormesh(spec_t,)
+  # print(np.shape(spec_t),name)
+  plt.pcolormesh(spec_t)
   plt.title('STFT Magnitude')
   plt.xlabel('Frequency')
   plt.ylabel('Time')

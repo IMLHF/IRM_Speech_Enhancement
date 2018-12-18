@@ -150,9 +150,12 @@ def _get_waveData1_waveData2(file1, noise_file):
   while len(noiseData) < LEN_WAWE_PAD_TO:
     noiseData = np.tile(noiseData, 2)
 
+  len_wave = len(waveData)
+  wave_begin = np.random.randint(len_wave-LEN_WAWE_PAD_TO+1)
+  waveData = waveData[wave_begin:wave_begin+LEN_WAWE_PAD_TO]
+
   len_noise = len(noiseData)
   noise_begin = np.random.randint(len_noise-LEN_WAWE_PAD_TO+1)
-  waveData = waveData[:LEN_WAWE_PAD_TO]
   noiseData = noiseData[noise_begin:noise_begin+LEN_WAWE_PAD_TO]
   if WAVE_NORM:
     waveData = waveData/np.max(np.abs(waveData)) * 32767
@@ -376,7 +379,7 @@ def generate_tfrecord(gen=True):
 
 def get_batch_use_tfdata(tfrecords_list, get_theta=False):
   files = tf.data.Dataset.list_files(tfrecords_list)
-  files = files.take(MIXED_AISHELL_PARAM.MAX_TFRECORD_FILES)
+  files = files.take(MIXED_AISHELL_PARAM.MAX_TFRECORD_FILES_USED)
   if MIXED_AISHELL_PARAM.SHUFFLE:
     files = files.shuffle(MIXED_AISHELL_PARAM.PROCESS_NUM_GENERATE_TFERCORD)
   if not MIXED_AISHELL_PARAM.SHUFFLE:
@@ -420,12 +423,12 @@ def get_batch_use_tfdata(tfrecords_list, get_theta=False):
 
 def _get_batch_use_tfdata(tfrecords_list, get_theta=False):
   files = os.listdir(tfrecords_list[:-11])
-  files = files[:min(MIXED_AISHELL_PARAM.MAX_TFRECORD_FILES, len(files))]
+  files = files[:min(MIXED_AISHELL_PARAM.MAX_TFRECORD_FILES_USED, len(files))]
   files = [os.path.join(tfrecords_list[:-11], file) for file in files]
   dataset_list = [tf.data.TFRecordDataset(file).map(parse_func_with_theta if get_theta else parse_func,
                                                     num_parallel_calls=NNET_PARAM.num_threads_processing_data) for file in files]
 
-  num_classes = MIXED_AISHELL_PARAM.MAX_TFRECORD_FILES
+  num_classes = MIXED_AISHELL_PARAM.MAX_TFRECORD_FILES_USED
   num_classes_per_batch = NNET_PARAM.batch_size
   num_utt_per_class = NNET_PARAM.batch_size//num_classes_per_batch
 
