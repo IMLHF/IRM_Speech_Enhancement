@@ -150,10 +150,15 @@ def _get_waveData1_waveData2(file1, noise_file):
   while len(noiseData) < LEN_WAWE_PAD_TO:
     noiseData = np.tile(noiseData, 2)
 
-  len_wave = len(waveData)
-  wave_begin = np.random.randint(len_wave-LEN_WAWE_PAD_TO+1)
-  waveData = waveData[wave_begin:wave_begin+LEN_WAWE_PAD_TO]
+  # wave random trunc(only when training)
+  if NNET_PARAM.decode:
+    waveData = waveData[:LEN_WAWE_PAD_TO]
+  else:
+    len_wave = len(waveData)
+    wave_begin = np.random.randint(len_wave-LEN_WAWE_PAD_TO+1)
+    waveData = waveData[wave_begin:wave_begin+LEN_WAWE_PAD_TO]
 
+  # noise random trunc
   len_noise = len(noiseData)
   noise_begin = np.random.randint(len_noise-LEN_WAWE_PAD_TO+1)
   noiseData = noiseData[noise_begin:noise_begin+LEN_WAWE_PAD_TO]
