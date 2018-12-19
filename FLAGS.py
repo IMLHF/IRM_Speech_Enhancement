@@ -10,7 +10,7 @@ class NNET_PARAM:
   MASK_TYPE = "IRM"  # 'PSIRM'
   CLIP_NORM = 5.0
   SAVE_DIR = 'exp/rnn_irm'
-  decode = 0  # 0:train; 1:decode_for_show; 2:decode_test_set_calculate_SDR_Improvement
+  decode = 1  # 0:train; 1:decode_for_show; 2:decode_test_set_calculate_SDR_Improvement
   batch_size = 128
   learning_rate = 0.001
   start_halving_impr = 0.0003
@@ -66,7 +66,7 @@ class MIXED_AISHELL_PARAM:
   NOISE_DIR = '/home/student/work/lhf/noise_lhf'
   # WAVE_NORM = False
   LOG_NORM_MAX = 6
-  LOG_NORM_MIN = -3
+  LOG_NORM_MIN = -0.3
   NFFT = 512
   OVERLAP = 256
   FS = 16000
