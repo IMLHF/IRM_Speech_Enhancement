@@ -138,12 +138,16 @@ def _ini_data(wave_dir, noise_dir, out_dir):
 
 def _get_waveData1_waveData2(file1, noise_file):
   f1 = wave.open(file1, 'rb')
-  f2 = wave.open(noise_file, 'rb')
   waveData = np.fromstring(f1.readframes(f1.getnframes()),
                            dtype=np.int16)
+  f1.close()
+
+  if noise_file == 'None':
+    return waveData, 0
+
+  f2 = wave.open(noise_file, 'rb')
   noiseData = np.fromstring(f2.readframes(f2.getnframes()),
                             dtype=np.int16)
-  f1.close()
   f2.close()
   while len(waveData) < LEN_WAWE_PAD_TO:
     waveData = np.tile(waveData, 2)
@@ -188,7 +192,11 @@ def _extract_norm_log_mag_spec(data):
   # Normalization
   log_mag_spec = np.log10(mag_spec+0.5)
   # #TODO
-  # print('???', np.max(log_mag_spec), np.min(log_mag_spec))
+  # print('???', np.max(log_mag_spec),
+  #       np.min(log_mag_spec),
+  #       np.mean(log_mag_spec),
+  #       np.var(log_mag_spec),
+  #       np.sqrt(np.var(log_mag_spec)))
   log_mag_spec[log_mag_spec > LOG_NORM_MAX] = LOG_NORM_MAX
   log_mag_spec[log_mag_spec < LOG_NORM_MIN] = LOG_NORM_MIN
   log_mag_spec += np.abs(LOG_NORM_MIN)

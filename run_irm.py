@@ -115,8 +115,11 @@ def decode_oneset(setname, set_index_list_dir, ckpt_dir='nnet'):
     uttdir1, uttdir2 = index_str.replace('\n', '').split(' ')
     # print(uttdir1,uttdir2)
     uttwave1, uttwave2 = wav_tool._get_waveData1_waveData2(uttdir1, uttdir2)
-    noise_rate = np.random.random()*MIXED_AISHELL_PARAM.MAX_NOISE_RATE
-    mixed_wave_t = wav_tool._mix_wav(uttwave1, uttwave2*noise_rate)
+    if uttdir2!='None':# 解码单一混合语音
+      noise_rate = np.random.random()*MIXED_AISHELL_PARAM.MAX_NOISE_RATE
+      mixed_wave_t = wav_tool._mix_wav(uttwave1, uttwave2*noise_rate)
+    else:
+      mixed_wave_t = uttwave1
     x_spec_t = wav_tool._extract_norm_log_mag_spec(mixed_wave_t)
     y_spec_t = wav_tool._extract_norm_log_mag_spec(uttwave1)
     x_theta_t = wav_tool._extract_phase(mixed_wave_t)
@@ -176,8 +179,7 @@ def decode_oneset(setname, set_index_list_dir, ckpt_dir='nnet'):
   total_batch = data_len // NNET_PARAM.batch_size if data_len % NNET_PARAM.batch_size == 0 else (
       data_len // NNET_PARAM.batch_size)+1
   for i_batch in range(total_batch):
-    cleaned = sess.run([model.cleaned])
-    cleaned = np.squeeze(cleaned)
+    cleaned = sess.run(model.cleaned)
     s_site = i_batch*NNET_PARAM.batch_size
     e_site = min(s_site+NNET_PARAM.batch_size, data_len)
     for i in range(s_site, e_site):
