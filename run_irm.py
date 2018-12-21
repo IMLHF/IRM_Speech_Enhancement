@@ -129,6 +129,8 @@ def decode_oneset(setname, set_index_list_dir, ckpt_dir='nnet'):
     x_theta.append(x_theta_t)
     y_theta.append(y_theta_t)
     lengths.append(np.shape(x_spec_t)[0])
+  # TODO multi_single_mixed_wave_test
+  # x_spec,y_spec,x_theta,y_theta= np.padded_array(,lengths)
   x_spec = np.array(x_spec, dtype=np.float32)
   y_spec = np.array(y_spec, dtype=np.float32)
   x_theta = np.array(x_theta, dtype=np.float32)
