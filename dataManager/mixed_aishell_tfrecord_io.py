@@ -136,13 +136,16 @@ def _ini_data(wave_dir, noise_dir, out_dir):
         (all_mixed, time.time()-all_stime))
 
 
-def _get_waveData1_waveData2(file1, noise_file):
+def _get_waveData1_waveData2_MAX_Volume(file1, noise_file):
+  eps = 0.0000001
   f1 = wave.open(file1, 'rb')
   waveData = np.fromstring(f1.readframes(f1.getnframes()),
                            dtype=np.int16)
   f1.close()
 
   if noise_file == 'None':
+    waveMAX = np.max(np.abs(waveData))
+    waveData = waveData/waveMAX * 32767
     return waveData, 0
 
   f2 = wave.open(noise_file, 'rb')
@@ -167,7 +170,6 @@ def _get_waveData1_waveData2(file1, noise_file):
   noise_begin = np.random.randint(len_noise-LEN_WAWE_PAD_TO+1)
   noiseData = noiseData[noise_begin:noise_begin+LEN_WAWE_PAD_TO]
   if WAVE_NORM:
-    eps = 0.0000001
     waveMAX = np.max(np.abs(waveData))
     noiseMAX = np.max(np.abs(noiseData))
     waveMAX = eps if waveMAX == 0 else waveMAX
@@ -218,7 +220,7 @@ def _extract_phase(data):
 
 
 def _extract_feature_x_y_xtheta_ytheta(utt_dir1, utt_dir2):
-  waveData1, waveData2 = _get_waveData1_waveData2(
+  waveData1, waveData2 = _get_waveData1_waveData2_MAX_Volume(
       utt_dir1, utt_dir2)
   # utt2作为噪音
   noise_rate = np.random.random()

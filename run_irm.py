@@ -3,6 +3,7 @@ import tensorflow as tf
 import numpy as np
 import sys
 import utils
+import utils.audio_tool
 import os
 import shutil
 from models.lstm_SE import SE_MODEL
@@ -36,7 +37,7 @@ def show_onewave(decode_ans_dir, name, x_spec, y_spec, x_angle, y_angle, cleaned
   utils.spectrum_tool.picture_spec(np.log10(y_spec+0.001),
                                    decode_ans_dir+'/raw_spec_'+name)
 
-  # cleaned_spec = cleaned * np.exp(y_angle*1j)
+  x_spec = x_spec * np.exp(x_angle*1j)
   y_spec = y_spec * np.exp(y_angle*1j)
   if NNET_PARAM.RESTORE_PHASE == 'CLEANED':
     cleaned_spec = cleaned * np.exp(y_angle*1j)
@@ -47,59 +48,45 @@ def show_onewave(decode_ans_dir, name, x_spec, y_spec, x_angle, y_angle, cleaned
                                                    MIXED_AISHELL_PARAM.NFFT,
                                                    MIXED_AISHELL_PARAM.OVERLAP,
                                                    NNET_PARAM.GRIFFIN_ITERNUM)
-  x_spec = x_spec * np.exp(x_angle*1j)
 
+  framerate = 16000
+  bits = 16
+
+  # write restore wave
   reY = utils.spectrum_tool.librosa_istft(
       cleaned_spec.T, MIXED_AISHELL_PARAM.NFFT, MIXED_AISHELL_PARAM.OVERLAP)
-  # norm resotred wave
-  if NNET_PARAM.decode_output_norm_speaker_volume:
-    reY = reY/np.max(np.abs(reY)) * 32767
-  reCONY = reY
-  wavefile = wave.open(
-      decode_ans_dir+'/restore_audio_'+name+'.wav', 'wb')
-  nchannels = 1
-  sampwidth = 2  # 采样位宽，2表示16位
-  framerate = 16000
-  nframes = len(reCONY)
-  comptype = "NONE"
-  compname = "not compressed"
-  wavefile.setparams((nchannels, sampwidth, framerate, nframes,
-                      comptype, compname))
-  wavefile.writeframes(
-      np.array(reCONY, dtype=np.int16))
+  if NNET_PARAM.decode_output_norm_speaker_volume: # norm resotred wave
+    reY = reY/np.max(np.abs(reY))*32767
+  utils.audio_tool.write_audio(decode_ans_dir+'/restore_audio_'+name+'.wav',
+                               reY,
+                               framerate,
+                               bits, 'wav')
 
   # write raw wave
   rawY = utils.spectrum_tool.librosa_istft(
       y_spec.T, MIXED_AISHELL_PARAM.NFFT, MIXED_AISHELL_PARAM.OVERLAP)
-  rawCONY = rawY
-  wavefile = wave.open(
-      decode_ans_dir+'/raw_audio_'+name+'.wav', 'wb')
-  nframes = len(rawCONY)
-  wavefile.setparams((nchannels, sampwidth, framerate, nframes,
-                      comptype, compname))
-  wavefile.writeframes(
-      np.array(rawCONY, dtype=np.int16))
+  utils.audio_tool.write_audio(decode_ans_dir+'/raw_audio_'+name+'.wav',
+                               rawY,
+                               framerate,
+                               bits, 'wav')
 
-  # write mixed wave
+  # # write mixed wave
   mixedWave = utils.spectrum_tool.librosa_istft(
       x_spec.T, MIXED_AISHELL_PARAM.NFFT, MIXED_AISHELL_PARAM.OVERLAP)
-  wavefile = wave.open(
-      decode_ans_dir+'/mixed_audio_'+name+'.wav', 'wb')
-  nframes = len(mixedWave)
-  wavefile.setparams((nchannels, sampwidth, framerate, nframes,
-                      comptype, compname))
-  wavefile.writeframes(
-      np.array(mixedWave, dtype=np.int16))
+  utils.audio_tool.write_audio(decode_ans_dir+'/mixed_audio_'+name+'.wav',
+                               mixedWave,
+                               framerate,
+                               bits, 'wav')
 
   # wav_pic(oscillograph)
-  utils.spectrum_tool.picture_wave(reCONY,
+  utils.spectrum_tool.picture_wave(reY,
                                    decode_ans_dir +
                                    '/restore_wav_'+name,
-                                   16000)
-  utils.spectrum_tool.picture_wave(rawCONY,
+                                   framerate)
+  utils.spectrum_tool.picture_wave(rawY,
                                    decode_ans_dir +
                                    '/raw_wav_' + name,
-                                   16000)
+                                   framerate)
 
 
 def decode_oneset(setname, set_index_list_dir, ckpt_dir='nnet'):
@@ -116,11 +103,11 @@ def decode_oneset(setname, set_index_list_dir, ckpt_dir='nnet'):
   for i, index_str in enumerate(dataset_index_strlist):
     uttdir1, uttdir2 = index_str.replace('\n', '').split(' ')
     # print(uttdir1,uttdir2)
-    uttwave1, uttwave2 = wav_tool._get_waveData1_waveData2(uttdir1, uttdir2)
-    if uttdir2 != 'None':  # 解码单一混合语音
+    uttwave1, uttwave2 = wav_tool._get_waveData1_waveData2_MAX_Volume(uttdir1, uttdir2)
+    if uttdir2 != 'None':  # 将村级语音和噪音混合后解码
       noise_rate = np.random.random()*MIXED_AISHELL_PARAM.MAX_NOISE_RATE
       mixed_wave_t = wav_tool._mix_wav(uttwave1, uttwave2*noise_rate)
-    else:
+    else:  # 解码单一混合语音（uttwave1是带有噪声的语音）
       mixed_wave_t = uttwave1
     x_spec_t = wav_tool._extract_norm_log_mag_spec(mixed_wave_t)
     y_spec_t = wav_tool._extract_norm_log_mag_spec(uttwave1)
