@@ -49,7 +49,7 @@ def show_onewave(decode_ans_dir, name, x_spec, y_spec, x_angle, y_angle, cleaned
                                                    MIXED_AISHELL_PARAM.OVERLAP,
                                                    NNET_PARAM.GRIFFIN_ITERNUM)
 
-  framerate = 16000
+  framerate = MIXED_AISHELL_PARAM.FS
   bits = 16
 
   # write restore wave
