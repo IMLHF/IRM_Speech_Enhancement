@@ -15,6 +15,7 @@ from dataManager.mixed_aishell_tfrecord_io import generate_tfrecord, get_batch_u
 
 os.environ['CUDA_VISIBLE_DEVICES'] = sys.argv[1]
 
+
 def decode_testSet_get_SDR_Impr():
   pass
 
@@ -35,16 +36,17 @@ def show_onewave(decode_ans_dir, name, x_spec, y_spec, x_angle, y_angle, cleaned
   utils.spectrum_tool.picture_spec(np.log10(y_spec+0.001),
                                    decode_ans_dir+'/raw_spec_'+name)
 
-  cleaned_spec = cleaned * np.exp(y_angle*1j)
+  # cleaned_spec = cleaned * np.exp(y_angle*1j)
+  y_spec = y_spec * np.exp(y_angle*1j)
   if NNET_PARAM.RESTORE_PHASE == 'CLEANED':
-    y_spec = y_spec * np.exp(y_angle*1j)
+    cleaned_spec = cleaned * np.exp(y_angle*1j)
   elif NNET_PARAM.RESTORE_PHASE == 'MIXED':
-    y_spec = y_spec * np.exp(x_angle*1j)
+    cleaned_spec = cleaned * np.exp(x_angle*1j)
   elif NNET_PARAM.RESTORE_PHASE == 'GRIFFIN_LIM':
-    y_spec = utils.spectrum_tool.griffin_lim(y_spec.T,
-                                             MIXED_AISHELL_PARAM.NFFT,
-                                             MIXED_AISHELL_PARAM.OVERLAP,
-                                             NNET_PARAM.GRIFFIN_ITERNUM)
+    cleaned_spec = utils.spectrum_tool.griffin_lim(cleaned.T,
+                                                   MIXED_AISHELL_PARAM.NFFT,
+                                                   MIXED_AISHELL_PARAM.OVERLAP,
+                                                   NNET_PARAM.GRIFFIN_ITERNUM)
   x_spec = x_spec * np.exp(x_angle*1j)
 
   reY = utils.spectrum_tool.librosa_istft(
@@ -115,7 +117,7 @@ def decode_oneset(setname, set_index_list_dir, ckpt_dir='nnet'):
     uttdir1, uttdir2 = index_str.replace('\n', '').split(' ')
     # print(uttdir1,uttdir2)
     uttwave1, uttwave2 = wav_tool._get_waveData1_waveData2(uttdir1, uttdir2)
-    if uttdir2!='None':# 解码单一混合语音
+    if uttdir2 != 'None':  # 解码单一混合语音
       noise_rate = np.random.random()*MIXED_AISHELL_PARAM.MAX_NOISE_RATE
       mixed_wave_t = wav_tool._mix_wav(uttwave1, uttwave2*noise_rate)
     else:
