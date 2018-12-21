@@ -55,7 +55,7 @@ def show_onewave(decode_ans_dir, name, x_spec, y_spec, x_angle, y_angle, cleaned
   # write restore wave
   reY = utils.spectrum_tool.librosa_istft(
       cleaned_spec.T, MIXED_AISHELL_PARAM.NFFT, MIXED_AISHELL_PARAM.OVERLAP)
-  if NNET_PARAM.decode_output_norm_speaker_volume: # norm resotred wave
+  if NNET_PARAM.decode_output_norm_speaker_volume:  # norm resotred wave
     reY = reY/np.max(np.abs(reY))*32767
   utils.audio_tool.write_audio(decode_ans_dir+'/restore_audio_'+name+'.wav',
                                reY,
@@ -103,7 +103,8 @@ def decode_oneset(setname, set_index_list_dir, ckpt_dir='nnet'):
   for i, index_str in enumerate(dataset_index_strlist):
     uttdir1, uttdir2 = index_str.replace('\n', '').split(' ')
     # print(uttdir1,uttdir2)
-    uttwave1, uttwave2 = wav_tool._get_waveData1_waveData2_MAX_Volume(uttdir1, uttdir2)
+    uttwave1, uttwave2 = wav_tool._get_waveData1_waveData2_MAX_Volume(
+        uttdir1, uttdir2)
     if uttdir2 != 'None':  # 将村级语音和噪音混合后解码
       noise_rate = np.random.random()*MIXED_AISHELL_PARAM.MAX_NOISE_RATE
       mixed_wave_t = wav_tool._mix_wav(uttwave1, uttwave2*noise_rate)
@@ -118,8 +119,18 @@ def decode_oneset(setname, set_index_list_dir, ckpt_dir='nnet'):
     x_theta.append(x_theta_t)
     y_theta.append(y_theta_t)
     lengths.append(np.shape(x_spec_t)[0])
-  # TODO multi_single_mixed_wave_test
-  # x_spec,y_spec,x_theta,y_theta= np.padded_array(,lengths)
+
+  #  multi_single_mixed_wave_test
+  max_length = np.max(lengths)
+  x_spec = [np.pad(x_spec_t, ((0, max_length-lengths[i]), (0, 0)), 'constant', constant_values=0)
+            for i, x_spec_t in enumerate(x_spec)]
+  y_spec = [np.pad(y_spec_t, ((0, max_length-lengths[i]), (0, 0)), 'constant', constant_values=0)
+            for i, y_spec_t in enumerate(y_spec)]
+  x_theta = [np.pad(x_theta_t, ((0, max_length-lengths[i]), (0, 0)), 'constant', constant_values=0)
+             for i, x_theta_t in enumerate(x_theta)]
+  y_theta = [np.pad(y_theta_t, ((0, max_length-lengths[i]), (0, 0)), 'constant', constant_values=0)
+             for i, y_theta_t in enumerate(y_theta)]
+
   x_spec = np.array(x_spec, dtype=np.float32)
   y_spec = np.array(y_spec, dtype=np.float32)
   x_theta = np.array(x_theta, dtype=np.float32)
@@ -174,8 +185,12 @@ def decode_oneset(setname, set_index_list_dir, ckpt_dir='nnet'):
     s_site = i_batch*NNET_PARAM.batch_size
     e_site = min(s_site+NNET_PARAM.batch_size, data_len)
     for i in range(s_site, e_site):
-      show_onewave(decode_ans_dir, str(i), x_spec[i], y_spec[i], x_theta[i], y_theta[i],
-                   cleaned[i-s_site])
+      show_onewave(decode_ans_dir, str(i),
+                   x_spec[i][:lengths[i-s_site]],
+                   y_spec[i][:lengths[i-s_site]],
+                   x_theta[i][:lengths[i-s_site]],
+                   y_theta[i][:lengths[i-s_site]],
+                   cleaned[i-s_site][:lengths[i-s_site]])
 
   sess.close()
   tf.logging.info("Decoding done.")
