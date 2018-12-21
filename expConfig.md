@@ -1,7 +1,8 @@
-C1:  400 speaker, few_noise, log_mag_norm[-3,6], irm
-C2:  400 speaker, few_noise, log_mag_norm[-0.3,6], irm
-C3:  1100 speaker, large_noise, log_mag_norm[-0.3,6], irm
-C4:  1100 speaker, large_noise, log_mag_norm[-0.3,6], irm, new_loss
+C0:  90 speaker 23400utt[:260:290:320], few_noise, log_mag_norm[-3,6], irm, DATASET_SIZES = [600000, 18000, 100000]
+C1:  400 speaker 108000utt[:270:300:320], few_noise, log_mag_norm[-3,6], irm
+C2:  400 speaker 108000utt[:270:300:320], few_noise, log_mag_norm[-0.3,6], irm
+C3:  1991 speaker 796400utt[:400:460:520], large_noise, log_mag_norm[-0.3,6], irm
+C4:  1991 speaker 796400utt[:400:460:520], large_noise, log_mag_norm[-0.3,6], irm, new_loss
 
 
 
