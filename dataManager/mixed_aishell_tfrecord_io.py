@@ -167,8 +167,13 @@ def _get_waveData1_waveData2(file1, noise_file):
   noise_begin = np.random.randint(len_noise-LEN_WAWE_PAD_TO+1)
   noiseData = noiseData[noise_begin:noise_begin+LEN_WAWE_PAD_TO]
   if WAVE_NORM:
-    waveData = waveData/np.max(np.abs(waveData)) * 32767
-    noiseData = noiseData/np.max(np.abs(noiseData)) * 32767
+    eps = 0.0000001
+    waveMAX = np.max(np.abs(waveData))
+    noiseMAX = np.max(np.abs(noiseData))
+    waveMAX = eps if waveMAX == 0 else waveMAX
+    noiseMAX = eps if noiseMAX == 0 else noiseMAX
+    waveData = waveData/waveMAX * 32767
+    noiseData = noiseData/noiseMAX * 32767
   return waveData, noiseData
 
 
