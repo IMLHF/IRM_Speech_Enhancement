@@ -56,8 +56,8 @@ def phase_spectrum_librosa_stft(signal, NFFT, overlap):
   return tmp.T
 
 
-def librosa_istft(signal_complex, NFFT, overlap):
-  tmp = librosa.core.istft(signal_complex,
+def librosa_istft(magnitude_complex, NFFT, overlap):
+  tmp = librosa.core.istft(magnitude_complex.T,
                            win_length=NFFT,
                            hop_length=overlap,
                            window=scipy.signal.windows.hann)

@@ -54,7 +54,7 @@ def show_onewave(decode_ans_dir, name, x_spec, y_spec, x_angle, y_angle, cleaned
 
   # write restore wave
   reY = utils.spectrum_tool.librosa_istft(
-      cleaned_spec.T, MIXED_AISHELL_PARAM.NFFT, MIXED_AISHELL_PARAM.OVERLAP)
+      cleaned_spec, MIXED_AISHELL_PARAM.NFFT, MIXED_AISHELL_PARAM.OVERLAP)
   if NNET_PARAM.decode_output_norm_speaker_volume:  # norm resotred wave
     reY = reY/np.max(np.abs(reY))*32767
   utils.audio_tool.write_audio(decode_ans_dir+'/restore_audio_'+name+'.wav',
@@ -64,7 +64,7 @@ def show_onewave(decode_ans_dir, name, x_spec, y_spec, x_angle, y_angle, cleaned
 
   # write raw wave
   rawY = utils.spectrum_tool.librosa_istft(
-      y_spec.T, MIXED_AISHELL_PARAM.NFFT, MIXED_AISHELL_PARAM.OVERLAP)
+      y_spec, MIXED_AISHELL_PARAM.NFFT, MIXED_AISHELL_PARAM.OVERLAP)
   utils.audio_tool.write_audio(decode_ans_dir+'/raw_audio_'+name+'.wav',
                                rawY,
                                framerate,
@@ -72,7 +72,7 @@ def show_onewave(decode_ans_dir, name, x_spec, y_spec, x_angle, y_angle, cleaned
 
   # # write mixed wave
   mixedWave = utils.spectrum_tool.librosa_istft(
-      x_spec.T, MIXED_AISHELL_PARAM.NFFT, MIXED_AISHELL_PARAM.OVERLAP)
+      x_spec, MIXED_AISHELL_PARAM.NFFT, MIXED_AISHELL_PARAM.OVERLAP)
   utils.audio_tool.write_audio(decode_ans_dir+'/mixed_audio_'+name+'.wav',
                                mixedWave,
                                framerate,
