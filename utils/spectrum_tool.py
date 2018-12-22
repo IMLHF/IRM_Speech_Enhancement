@@ -73,17 +73,20 @@ def griffin_lim(spec, NFFT, overlap, max_iter, wave_bits=16):
                                               overlap=overlap,)))*(np.power(2, wave_bits)-1)
 
   for i in range(max_iter-1):
-    stft_matrix = magnitude_spectrum_librosa_stft(y,
-                                                  NFFT=NFFT,
-                                                  overlap=overlap,)
+    stft_matrix = librosa.core.stft(y,
+                                    n_fft=NFFT,
+                                    hop_length=NFFT-overlap,
+                                    window=scipy.signal.windows.hann).T
     stft_matrix = spec * stft_matrix / np.abs(stft_matrix)
-    y = librosa_istft(stft_matrix,
-                      NFFT=NFFT,
-                      overlap=overlap,)
+    y = librosa.core.istft(stft_matrix.T,
+                           win_length=NFFT,
+                           hop_length=NFFT-overlap,
+                           window=scipy.signal.windows.hann)
 
-  stft_matrix = magnitude_spectrum_librosa_stft(y,
-                                                NFFT=NFFT,
-                                                overlap=overlap,)
+  stft_matrix = librosa.core.stft(y,
+                                  n_fft=NFFT,
+                                  hop_length=NFFT-overlap,
+                                  window=scipy.signal.windows.hann).T
   stft_matrix = spec * stft_matrix / np.abs(stft_matrix)
   return stft_matrix
 
