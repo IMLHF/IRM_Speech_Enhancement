@@ -138,6 +138,10 @@ class SE_MODEL(object):
     return self._labels
 
   @property
+  def mask(self):
+    return self._activations
+
+  @property
   def lengths(self):
     return self._lengths
 

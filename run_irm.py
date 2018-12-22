@@ -181,7 +181,11 @@ def decode_oneset(setname, set_index_list_dir, ckpt_dir='nnet'):
   total_batch = data_len // NNET_PARAM.batch_size if data_len % NNET_PARAM.batch_size == 0 else (
       data_len // NNET_PARAM.batch_size)+1
   for i_batch in range(total_batch):
-    cleaned = sess.run(model.cleaned)
+    cleaned, mask = sess.run([model.cleaned,model.mask])
+    print('mask max min:', np.max(mask),np.min(mask))
+    print('mask max:',np.max(mask[0]),np.max(mask[1]),np.max(mask[2]),np.max(mask[3]))
+    print('mask min:',np.min(mask[0]),np.min(mask[1]),np.min(mask[2]),np.min(mask[3]))
+    # cleaned = sess.run(model.cleaned)
     s_site = i_batch*NNET_PARAM.batch_size
     e_site = min(s_site+NNET_PARAM.batch_size, data_len)
     for i in range(s_site, e_site):
