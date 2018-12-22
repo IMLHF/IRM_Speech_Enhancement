@@ -185,6 +185,7 @@ def decode_oneset(setname, set_index_list_dir, ckpt_dir='nnet'):
     print('mask max min:', np.max(mask),np.min(mask))
     print('mask max:',np.max(mask[0]),np.max(mask[1]),np.max(mask[2]),np.max(mask[3]))
     print('mask min:',np.min(mask[0]),np.min(mask[1]),np.min(mask[2]),np.min(mask[3]))
+    # print(np.sum(np.where(mask>1.1,1,0)),np.shape(mask)[0]*np.shape(mask)[1]*np.shape(mask)[2]) # percent >1.1
     # cleaned = sess.run(model.cleaned)
     s_site = i_batch*NNET_PARAM.batch_size
     e_site = min(s_site+NNET_PARAM.batch_size, data_len)
