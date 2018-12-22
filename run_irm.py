@@ -44,7 +44,7 @@ def show_onewave(decode_ans_dir, name, x_spec, y_spec, x_angle, y_angle, cleaned
   elif NNET_PARAM.RESTORE_PHASE == 'MIXED':
     cleaned_spec = cleaned * np.exp(x_angle*1j)
   elif NNET_PARAM.RESTORE_PHASE == 'GRIFFIN_LIM':
-    cleaned_spec = utils.spectrum_tool.griffin_lim(cleaned.T,
+    cleaned_spec = utils.spectrum_tool.griffin_lim(cleaned,
                                                    MIXED_AISHELL_PARAM.NFFT,
                                                    MIXED_AISHELL_PARAM.OVERLAP,
                                                    NNET_PARAM.GRIFFIN_ITERNUM)
