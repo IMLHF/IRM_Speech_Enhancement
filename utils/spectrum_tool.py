@@ -3,7 +3,7 @@ import scipy
 import scipy.signal
 import librosa
 import matplotlib.pyplot as plt
-plt.switch_backend('agg')
+# plt.switch_backend('agg')
 # ffmpeg -i 20180829_191732_mono.wav -ar 16000 -ac 1 20180829_191732_mono16k.wav
 
 
@@ -59,6 +59,7 @@ def phase_spectrum_librosa_stft(signal, NFFT, overlap):
   return tmp.T
 
 
+# magnitude_complex[time,frequence]
 def librosa_istft(magnitude_complex, NFFT, overlap):
   tmp = librosa.core.istft(magnitude_complex.T,
                            win_length=NFFT,
@@ -70,14 +71,14 @@ def librosa_istft(magnitude_complex, NFFT, overlap):
 def griffin_lim(spec, NFFT, overlap, max_iter, wave_bits=16):
   y = np.random.random(np.shape(librosa_istft(spec,
                                               NFFT=NFFT,
-                                              overlap=overlap,)))*(np.power(2, wave_bits)-1)
-
+                                              overlap=overlap,)))
   for i in range(max_iter-1):
     stft_matrix = librosa.core.stft(y,
                                     n_fft=NFFT,
                                     hop_length=NFFT-overlap,
-                                    window=scipy.signal.windows.hann).T
-    stft_matrix = spec * stft_matrix / np.abs(stft_matrix)
+                                    window=scipy.signal.windows.hann)
+    stft_matrix = stft_matrix.T
+    stft_matrix = spec * stft_matrix / np.maximum(np.abs(stft_matrix),1e-10)
     y = librosa.core.istft(stft_matrix.T,
                            win_length=NFFT,
                            hop_length=NFFT-overlap,
@@ -86,8 +87,9 @@ def griffin_lim(spec, NFFT, overlap, max_iter, wave_bits=16):
   stft_matrix = librosa.core.stft(y,
                                   n_fft=NFFT,
                                   hop_length=NFFT-overlap,
-                                  window=scipy.signal.windows.hann).T
-  stft_matrix = spec * stft_matrix / np.abs(stft_matrix)
+                                  window=scipy.signal.windows.hann)
+  stft_matrix = stft_matrix.T
+  stft_matrix = spec * stft_matrix / np.maximum(np.abs(stft_matrix),1e-10)
   return stft_matrix
 
 
