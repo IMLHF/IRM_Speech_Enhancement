@@ -7,14 +7,14 @@ class NNET_PARAM:
   LSTM_ACTIVATION = 'tanh'
   KEEP_PROB = 0.8
   RNN_LAYER = 2
-  MASK_TYPE = "IRM"  # or 'PSIRM'
+  MASK_TYPE = "PSIRM"  # or 'PSIRM'
   CLIP_NORM = 5.0
   SAVE_DIR = 'exp/rnn_irm'
   '''
   decode:
     decode by the flod '_decode_index'. one set per (.list) file.
   '''
-  decode = 1  # 0:train; 1:decode_for_show; 2:decode_test_set_calculate_SDR_Improvement
+  decode = 0  # 0:train; 1:decode_for_show; 2:decode_test_set_calculate_SDR_Improvement
 
   batch_size = 128
   learning_rate = 0.001
@@ -29,7 +29,7 @@ class NNET_PARAM:
   # Stop when relative loss is lower than end_halving_impr.
   end_halving_impr = 0.0005
   # The num of threads to read tfrecords files.
-  num_threads_processing_data = 64
+  num_threads_processing_data = 16
   decode_output_norm_speaker_volume = True
   RESTORE_PHASE = 'GRIFFIN_LIM'  # 'MIXED','CLEANED','GRIFFIN_LIM'.
   GRIFFIN_ITERNUM = 50
@@ -59,19 +59,20 @@ class MIXED_AISHELL_PARAM:
   SHUFFLE = False
 
   # TFRECORDS_DIR = '/feature_tfrecords_utt03s_irm' # for docker
-  TFRECORDS_DIR = '/home/student/work/lhf/alldata/irm_data/feature_tfrecords_utt03s_irm'
+  TFRECORDS_DIR = '/home/student/work/lhf/alldata/irm_data/feature_tfrecords_utt03s_irm_SNR_MIX'
   # 'big' or 'small'.if 'small', one file per record.
   LEN_WAWE_PAD_TO = 16000*3  # Mixed wave length (16000*3 is 3 seconds)
   UTT_SEG_FOR_MIX = [400, 460]  # Separate utt to [0:260],[260,290],[290:end]
   DATASET_NAMES = ['train', 'validation', 'test_cc']
   DATASET_SIZES = [600000, 18000, 100000]
 
-  WAVE_NORM = True
-  MAX_NOISE_RATE = 1.0  # wave_norm + noise_rate
+  MAX_VOLUME=True
+  WAVE_NORM = MAX_VOLUME
+  MAX_SNR = 9  # 以不同信噪比混合
+  MIN_SNR = -6
   NOISE_DIR = '/home/student/work/lhf/alldata/many_noise'
-  # WAVE_NORM = False
   LOG_NORM_MAX = 6
-  LOG_NORM_MIN = -3
+  LOG_NORM_MIN = -0.3
   NFFT = 512
   OVERLAP = 256
   FS = 16000

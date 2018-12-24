@@ -9,6 +9,7 @@ import copy
 import scipy.io
 import datetime
 import wave
+import utils
 from utils import spectrum_tool
 from FLAGS import NNET_PARAM
 from FLAGS import MIXED_AISHELL_PARAM
@@ -31,6 +32,8 @@ DATASET_NAMES = MIXED_AISHELL_PARAM.DATASET_NAMES
 DATASET_SIZES = MIXED_AISHELL_PARAM.DATASET_SIZES
 WAVE_NORM = MIXED_AISHELL_PARAM.WAVE_NORM
 NOISE_DIR = MIXED_AISHELL_PARAM.NOISE_DIR
+MAX_SNR = MIXED_AISHELL_PARAM.MAX_SNR
+MIN_SNR = MIXED_AISHELL_PARAM.MIN_SNR
 # endregion
 
 
@@ -137,15 +140,15 @@ def _ini_data(wave_dir, noise_dir, out_dir):
 
 
 def _get_waveData1_waveData2_MAX_Volume(file1, noise_file):
-  eps = 0.0000001
   f1 = wave.open(file1, 'rb')
   waveData = np.fromstring(f1.readframes(f1.getnframes()),
                            dtype=np.int16)
   f1.close()
 
   if noise_file == 'None':
-    waveMAX = np.max(np.abs(waveData))
-    waveData = waveData/waveMAX * 32767
+    if WAVE_NORM:
+      waveMAX = np.max(np.abs(waveData))
+      waveData = waveData/waveMAX * 32767 if waveMAX > 0 else waveData
     return waveData, 0
 
   f2 = wave.open(noise_file, 'rb')
@@ -172,10 +175,8 @@ def _get_waveData1_waveData2_MAX_Volume(file1, noise_file):
   if WAVE_NORM:
     waveMAX = np.max(np.abs(waveData))
     noiseMAX = np.max(np.abs(noiseData))
-    waveMAX = eps if waveMAX == 0 else waveMAX
-    noiseMAX = eps if noiseMAX == 0 else noiseMAX
-    waveData = waveData/waveMAX * 32767
-    noiseData = noiseData/noiseMAX * 32767
+    waveData = waveData/waveMAX * 32767 if waveMAX > 0 else waveData
+    noiseData = noiseData/noiseMAX * 32767 if noiseMAX > 0 else noiseData
   return waveData, noiseData
 
 
@@ -184,6 +185,17 @@ def _mix_wav(waveData1, waveData2):
   mixedData = (waveData1+waveData2)/2
   mixedData = np.array(mixedData, dtype=np.int16)  # 必须指定是16位，因为写入音频时写入的是二进制数据
   return mixedData
+
+
+def _mix_wav_by_SNR(waveData, noise):
+  # S = (speech+alpha*noise)/(1+alpha)
+  snr = np.random.randint(MIN_SNR, MAX_SNR+1)
+  As = np.mean(waveData)
+  An = np.mean(noise)
+
+  alpha = As/(An*(10**(snr/20))) if An != 0 else 0
+  waveMix = (waveData+alpha*noise)/(1.0+alpha)
+  return waveMix
 
 
 def rmNormalization(tmp):
@@ -223,22 +235,13 @@ def _extract_feature_x_y_xtheta_ytheta(utt_dir1, utt_dir2):
   waveData1, waveData2 = _get_waveData1_waveData2_MAX_Volume(
       utt_dir1, utt_dir2)
   # utt2作为噪音
-  noise_rate = np.random.random()
-  mixedData = _mix_wav(waveData1, waveData2*noise_rate)
+  mixedData = _mix_wav_by_SNR(waveData1, waveData2)
 
-  # nchannels = 1
-  # sampwidth = 2  # 采样位宽，2表示16位
-  # framerate = 16000
-  # nframes = len(mixedData)
-  # comptype = "NONE"
-  # compname = "not compressed"
+  # write mixed wav
   # name1 = utt_dir1[utt_dir1.rfind('/')+1:utt_dir1.rfind('.')]
   # name2 = utt_dir2[utt_dir2.rfind('/')+1:]
-  # wavefile = wave.open('mixwave/mixed_'+name1+"_"+name2, 'wb')
-  # wavefile.setparams((nchannels, sampwidth, framerate, nframes,
-  #                     comptype, compname))
-  # wavefile.writeframes(
-  #     np.array(mixedData, dtype=np.int16))
+  # utils.audio_tool.write_audio('mixwave/mixed_'+name1+"_"+name2,
+  #                              mixedData,16000,16,'wav')
 
   X = _extract_norm_log_mag_spec(mixedData)
   Y = _extract_norm_log_mag_spec(waveData1)

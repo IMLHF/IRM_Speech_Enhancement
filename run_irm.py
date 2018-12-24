@@ -106,8 +106,7 @@ def decode_oneset(setname, set_index_list_dir, ckpt_dir='nnet'):
     uttwave1, uttwave2 = wav_tool._get_waveData1_waveData2_MAX_Volume(
         uttdir1, uttdir2)
     if uttdir2 != 'None':  # 将帧级语音和噪音混合后解码
-      noise_rate = np.random.random()*MIXED_AISHELL_PARAM.MAX_NOISE_RATE
-      mixed_wave_t = wav_tool._mix_wav(uttwave1, uttwave2*noise_rate)
+      mixed_wave_t = wav_tool._mix_wav_by_SNR(uttwave1, uttwave2)
     else:  # 解码单一混合语音（uttwave1是带有噪声的语音）
       mixed_wave_t = uttwave1
     x_spec_t = wav_tool._extract_norm_log_mag_spec(mixed_wave_t)
