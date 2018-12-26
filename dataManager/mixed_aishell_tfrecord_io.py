@@ -34,6 +34,10 @@ WAVE_NORM = MIXED_AISHELL_PARAM.WAVE_NORM
 NOISE_DIR = MIXED_AISHELL_PARAM.NOISE_DIR
 MAX_SNR = MIXED_AISHELL_PARAM.MAX_SNR
 MIN_SNR = MIXED_AISHELL_PARAM.MIN_SNR
+MAX_COEF = MIXED_AISHELL_PARAM.MAX_COEF
+MIN_COEF = MIXED_AISHELL_PARAM.MIN_COEF
+MIX_METHOD = MIXED_AISHELL_PARAM.MIX_METHOD
+
 # endregion
 
 
@@ -190,13 +194,18 @@ def _mix_wav(waveData1, waveData2):
 def _mix_wav_by_SNR(waveData, noise):
   # S = (speech+alpha*noise)/(1+alpha)
   snr = np.random.randint(MIN_SNR, MAX_SNR+1)
-  As = np.mean(waveData)
-  An = np.mean(noise)
+  As = np.mean(waveData**2)
+  An = np.mean(noise**2)
 
-  alpha = As/(An*(10**(snr/20))) if An != 0 else 0
+  alpha_pow = As/(An*(10**(snr/10))) if An != 0 else 0
+  alpha = np.sqrt(alpha_pow)
   waveMix = (waveData+alpha*noise)/(1.0+alpha)
   return waveMix
 
+def _mix_wav_LINEAR(waveData, noise):
+  coef = np.random.random()*(MAX_COEF-MIN_COEF)+MIN_COEF
+  waveMix = (waveData+coef*noise)/(1.0+coef)
+  return waveMix
 
 def rmNormalization(tmp):
   tmp = (10**(tmp*(LOG_NORM_MAX-LOG_NORM_MIN)+LOG_NORM_MIN))-0.5
@@ -235,7 +244,10 @@ def _extract_feature_x_y_xtheta_ytheta(utt_dir1, utt_dir2):
   waveData1, waveData2 = _get_waveData1_waveData2_MAX_Volume(
       utt_dir1, utt_dir2)
   # utt2作为噪音
-  mixedData = _mix_wav_by_SNR(waveData1, waveData2)
+  if MIX_METHOD == 'SNR':
+    mixedData = _mix_wav_by_SNR(waveData1, waveData2)
+  if MIX_METHOD == 'LINEAR':
+    mixedData = _mix_wav_LINEAR(waveData1, waveData2)
 
   # write mixed wav
   # name1 = utt_dir1[utt_dir1.rfind('/')+1:utt_dir1.rfind('.')]

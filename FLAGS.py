@@ -14,7 +14,7 @@ class NNET_PARAM:
   decode:
     decode by the flod '_decode_index'. one set per (.list) file.
   '''
-  decode = 0  # 0:train; 1:decode_for_show; 2:decode_test_set_calculate_SDR_Improvement
+  decode = 1  # 0:train; 1:decode_for_show; 2:decode_test_set_calculate_SDR_Improvement
 
   batch_size = 128
   learning_rate = 0.001
@@ -68,8 +68,14 @@ class MIXED_AISHELL_PARAM:
 
   MAX_VOLUME=True
   WAVE_NORM = MAX_VOLUME
+
+  MIX_METHOD = 'SNR' # "LINEAR"
   MAX_SNR = 9  # 以不同信噪比混合
   MIN_SNR = -6
+  #MIX_METHOD = "LINEAR"
+  MAX_COEF = 1.0  # 以不同系数混合
+  MIN_COEF = 0
+
   NOISE_DIR = '/home/student/work/lhf/alldata/many_noise'
   LOG_NORM_MAX = 6
   LOG_NORM_MIN = -0.3
