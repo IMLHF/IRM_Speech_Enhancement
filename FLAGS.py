@@ -1,13 +1,15 @@
+from losses import loss
 class NNET_PARAM:
+  MASK_TYPE = "IRM"  # or 'PSIRM'
+  LOSS_FUNC = loss.reduce_sum_frame_batchsize_MSE # "MSE" "MSE_LOW_FS_IMPROVE"
+  MODEL_TYPE = 'BLSTM'  # 'BLSTM' or 'BGRU'
   INPUT_SIZE = 257
   OUTPUT_SIZE = 257
-  MODEL_TYPE = 'BLSTM'  # 'BLSTM' or 'BGRU'
   LSTM_num_proj = 128
   RNN_SIZE = 512
   LSTM_ACTIVATION = 'tanh'
   KEEP_PROB = 0.8
   RNN_LAYER = 2
-  MASK_TYPE = "PSIRM"  # or 'PSIRM'
   CLIP_NORM = 5.0
   SAVE_DIR = 'exp/rnn_irm'
   '''
@@ -58,29 +60,32 @@ class MIXED_AISHELL_PARAM:
   TFRECORDS_NUM = 160  # 提多少，后面设置MAX_TFRECORD_FILES_USED表示用多少
   SHUFFLE = False
 
-  # TFRECORDS_DIR = '/feature_tfrecords_utt03s_irm' # for docker
-  TFRECORDS_DIR = '/home/student/work/lhf/alldata/irm_data/feature_tfrecords_utt03s_irm_SNR_MIX'
-  # 'big' or 'small'.if 'small', one file per record.
   LEN_WAWE_PAD_TO = 16000*3  # Mixed wave length (16000*3 is 3 seconds)
   UTT_SEG_FOR_MIX = [400, 460]  # Separate utt to [0:260],[260,290],[290:end]
   DATASET_NAMES = ['train', 'validation', 'test_cc']
   DATASET_SIZES = [600000, 18000, 100000]
 
+  MAX_TFRECORD_FILES_USED=160 # <=TFRECORDS_NUM
+
+  NOISE_DIR = '/home/student/work/lhf/alldata/many_noise'
+  NFFT = 512
+  OVERLAP = 256
+  FS = 16000
+  LOG_NORM_MAX = 6
+  LOG_NORM_MIN = -0.3
+
+
   MAX_VOLUME=True
   WAVE_NORM = MAX_VOLUME
 
-  MIX_METHOD = 'SNR' # "LINEAR"
+  MIX_METHOD = 'LINEAR' # "LINEAR" "SNR"
   MAX_SNR = 9  # 以不同信噪比混合
   MIN_SNR = -6
   #MIX_METHOD = "LINEAR"
   MAX_COEF = 1.0  # 以不同系数混合
   MIN_COEF = 0
 
-  NOISE_DIR = '/home/student/work/lhf/alldata/many_noise'
-  LOG_NORM_MAX = 6
-  LOG_NORM_MIN = -0.3
-  NFFT = 512
-  OVERLAP = 256
-  FS = 16000
-
-  MAX_TFRECORD_FILES_USED=160 # <=TFRECORDS_NUM
+  # TFRECORDS_DIR = '/feature_tfrecords_utt03s_irm' # for docker
+  TFRECORDS_DIR = '/home/student/work/lhf/alldata/irm_data/feature_tfrecords_utt03s_irm'
+  if MIX_METHOD =='SNR':
+    TFRECORDS_DIR = '/home/student/work/lhf/alldata/irm_data/feature_tfrecords_utt03s_irm_SNR_MIX'

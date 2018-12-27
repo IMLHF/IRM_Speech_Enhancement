@@ -6,7 +6,6 @@ import sys
 from tensorflow.contrib.rnn.python.ops import rnn
 from FLAGS import NNET_PARAM
 from utils import tf_tool
-from losses import loss
 
 
 class SE_MODEL(object):
@@ -105,8 +104,7 @@ class SE_MODEL(object):
     if NNET_PARAM.MASK_TYPE == 'PSIRM':
       self._labels *= tf.cos(theta_x_batch-theta_y_batch)
 
-    self._loss = loss.reduce_sum_frame_batchsize_MSE(self.cleaned,self.labels)
-
+    self._loss = NNET_PARAM.LOSS_FUNC(self.cleaned,self.labels)
     if tf.get_variable_scope().reuse:
       return
 
