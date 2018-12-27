@@ -227,8 +227,8 @@ def _extract_norm_log_mag_spec(data):
   #       np.sqrt(np.var(log_mag_spec)))
   log_mag_spec[log_mag_spec > LOG_NORM_MAX] = LOG_NORM_MAX
   log_mag_spec[log_mag_spec < LOG_NORM_MIN] = LOG_NORM_MIN
-  log_mag_spec += np.abs(LOG_NORM_MIN)
-  log_mag_spec /= (np.abs(LOG_NORM_MIN)+LOG_NORM_MAX)
+  log_mag_spec -= LOG_NORM_MIN
+  log_mag_spec /= (LOG_NORM_MAX - LOG_NORM_MIN)
   # mean=np.mean(log_mag_spec)
   # var=np.var(log_mag_spec)
   # log_mag_spec=(log_mag_spec-mean)/var
