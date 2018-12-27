@@ -184,6 +184,7 @@ def decode_oneset(setname, set_index_list_dir, ckpt_dir='nnet'):
   total_batch = data_len // NNET_PARAM.batch_size if data_len % NNET_PARAM.batch_size == 0 else (
       data_len // NNET_PARAM.batch_size)+1
   for i_batch in range(total_batch):
+    s_time = time.time()
     cleaned, mask = sess.run([model.cleaned,model.mask])
     print('mask max min:', np.max(mask),np.min(mask))
     # print('mask max:',np.max(mask[0]),np.max(mask[1]),np.max(mask[2]),np.max(mask[3]))
@@ -199,9 +200,12 @@ def decode_oneset(setname, set_index_list_dir, ckpt_dir='nnet'):
                    x_theta[i][:lengths[i-s_site]],
                    y_theta[i][:lengths[i-s_site]],
                    cleaned[i-s_site][:lengths[i-s_site]])
+    e_time = time.time()-s_time
+    print("One batch time: ",e_time)
 
   sess.close()
   tf.logging.info("Decoding done.")
+
 
 
 def decode_by_index():
@@ -209,8 +213,11 @@ def decode_by_index():
   for list_file in set_list:
     if list_file[-4:] == 'list':
       # print(list_file)
+      s_time=time.time()
       decode_oneset(
           list_file[:-5], os.path.join('_decode_index', list_file), ckpt_dir='nnet')
+      e_time=time.time()-s_time
+      print("cost Ttime: ",e_time)
 
 
 def train_one_epoch(sess, tr_model):
