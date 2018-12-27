@@ -1,5 +1,6 @@
 import tensorflow as tf
 import numpy as np
+import FLAGS
 
 
 def utt_PIT_MSE_for_CNN(y1, y2):
@@ -50,13 +51,9 @@ def reduce_sum_frame_batchsize_MSE(y1, y2):
 
 
 def reduce_sum_frame_batchsize_MSE_LOW_FS_IMPROVE(y1, y2):
+  loss1 = reduce_sum_frame_batchsize_MSE(y1, y2)
   low_frame = 2000
-  low_frame_point = int(257*(low_frame/8000))
-  con0 = np.array([0]*(257-low_frame_point), dtype=np.int)
-  con0 = np.tile(con0, (np.shape(y1)[1], 1)).T
-  con1 = np.array([1]*low_frame_point, dtype=np.int)
-  con1 = np.tile(con1, (np.shape(y1)[1], 1)).T
-  con = np.concatenate([con1, con0], axis=0)
-  print(np.shape(con))
-  loss = np.where(con, reduce_sum_frame_batchsize_MSE(y1,y2)*2, reduce_sum_frame_batchsize_MSE(y1,y2))
-  return loss
+  low_frame_point = int(257*(low_frame/(FLAGS.MIXED_AISHELL_PARAM.FS/2)))
+  loss2 = reduce_sum_frame_batchsize_MSE(tf.slice(y1, [0, 0, 0], [-1, low_frame_point, -1]),
+                                         tf.slice(y2, [0, 0, 0], [-1, low_frame_point, -1]))
+  return loss1+loss2
