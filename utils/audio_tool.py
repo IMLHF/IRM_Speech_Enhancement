@@ -16,6 +16,6 @@ def write_audio(file, data, sr, bits, _format, norm=True):
       16: 'PCM_16',
       24: 'PCM_24'
   }[bits]
-  data_t = data/(np.power(2, bits)-1) if norm else data
+  data_t = data/(np.power(2, bits-1)-1) if norm else data
   # -1.0 < data < 1.0, data.type=float
   return soundfile.write(file, data_t, sr, subtype=subtype, format=_format)

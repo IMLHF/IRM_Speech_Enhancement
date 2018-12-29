@@ -3,7 +3,7 @@ import scipy
 import scipy.signal
 import librosa
 import matplotlib.pyplot as plt
-plt.switch_backend('agg')
+# plt.switch_backend('agg')
 # ffmpeg -i 20180829_191732_mono.wav -ar 16000 -ac 1 20180829_191732_mono16k.wav
 
 
