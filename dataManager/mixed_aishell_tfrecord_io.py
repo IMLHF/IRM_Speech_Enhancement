@@ -21,8 +21,11 @@ RAW_DATA = MIXED_AISHELL_PARAM.RAW_DATA
 TFRECORD_DIR = MIXED_AISHELL_PARAM.TFRECORDS_DIR
 PROCESS_NUM_GENERATE_TFERCORD = MIXED_AISHELL_PARAM.PROCESS_NUM_GENERATE_TFERCORD
 TFRECORDS_NUM = MIXED_AISHELL_PARAM.TFRECORDS_NUM
+FEATURE_TYPE = MIXED_AISHELL_PARAM.FEATURE_TYPE
 LOG_NORM_MAX = MIXED_AISHELL_PARAM.LOG_NORM_MAX
 LOG_NORM_MIN = MIXED_AISHELL_PARAM.LOG_NORM_MIN
+MAG_NORM_MAX = MIXED_AISHELL_PARAM.MAG_NORM_MAX
+MAG_NORM_MIN = MIXED_AISHELL_PARAM.MAG_NORM_MIN
 NFFT = MIXED_AISHELL_PARAM.NFFT
 OVERLAP = MIXED_AISHELL_PARAM.OVERLAP
 FS = MIXED_AISHELL_PARAM.FS
@@ -202,37 +205,51 @@ def _mix_wav_by_SNR(waveData, noise):
   waveMix = (waveData+alpha*noise)/(1.0+alpha)
   return waveMix
 
+
 def _mix_wav_LINEAR(waveData, noise):
   coef = np.random.random()*(MAX_COEF-MIN_COEF)+MIN_COEF
   waveMix = (waveData+coef*noise)/(1.0+coef)
   return waveMix
 
+
 def rmNormalization(tmp):
-  tmp = (10**(tmp*(LOG_NORM_MAX-LOG_NORM_MIN)+LOG_NORM_MIN))-0.5
-  ans = np.where(tmp > 0, tmp, 0)  # 防止计算误差导致的反归一化结果为负数
-  return ans
+  if FEATURE_TYPE == 'LOG_MAG':
+    tmp = (10**(tmp*(LOG_NORM_MAX-LOG_NORM_MIN)+LOG_NORM_MIN))-0.5
+    ans = np.where(tmp > 0, tmp, 0)  # 防止计算误差导致的反归一化结果为负数
+    return ans
+  elif FEATURE_TYPE == 'MAG':
+    tmp = tmp*(MAG_NORM_MAX-MAG_NORM_MIN)+MAG_NORM_MIN
+    # tmp = np.where(tmp > 0, tmp, 0)
+    return tmp
 
 
 def _extract_norm_log_mag_spec(data):
   # 归一化的幅度谱对数
   mag_spec = spectrum_tool.magnitude_spectrum_librosa_stft(
       data, NFFT, OVERLAP)
-  # Normalization
-  log_mag_spec = np.log10(mag_spec+0.5)
-  # #TODO
-  # print('???', np.max(log_mag_spec),
-  #       np.min(log_mag_spec),
-  #       np.mean(log_mag_spec),
-  #       np.var(log_mag_spec),
-  #       np.sqrt(np.var(log_mag_spec)))
-  log_mag_spec[log_mag_spec > LOG_NORM_MAX] = LOG_NORM_MAX
-  log_mag_spec[log_mag_spec < LOG_NORM_MIN] = LOG_NORM_MIN
-  log_mag_spec -= LOG_NORM_MIN
-  log_mag_spec /= (LOG_NORM_MAX - LOG_NORM_MIN)
-  # mean=np.mean(log_mag_spec)
-  # var=np.var(log_mag_spec)
-  # log_mag_spec=(log_mag_spec-mean)/var
-  return log_mag_spec
+  if FEATURE_TYPE == 'LOG_MAG':
+    # Normalization
+    log_mag_spec = np.log10(mag_spec+0.5)
+    # #TODO
+    # print('???', np.max(log_mag_spec),
+    #       np.min(log_mag_spec),
+    #       np.mean(log_mag_spec),
+    #       np.var(log_mag_spec),
+    #       np.sqrt(np.var(log_mag_spec)))
+    log_mag_spec[log_mag_spec > LOG_NORM_MAX] = LOG_NORM_MAX
+    log_mag_spec[log_mag_spec < LOG_NORM_MIN] = LOG_NORM_MIN
+    log_mag_spec -= LOG_NORM_MIN
+    log_mag_spec /= (LOG_NORM_MAX - LOG_NORM_MIN)
+    # mean=np.mean(log_mag_spec)
+    # var=np.var(log_mag_spec)
+    # log_mag_spec=(log_mag_spec-mean)/var
+    return log_mag_spec
+  elif FEATURE_TYPE == 'MAG':
+    mag_spec[mag_spec > MAG_NORM_MAX] = MAG_NORM_MAX
+    mag_spec[mag_spec < MAG_NORM_MIN] = MAG_NORM_MIN
+    mag_spec -= MAG_NORM_MIN
+    mag_spec /= (MAG_NORM_MAX-MAG_NORM_MIN)
+    return mag_spec
 
 
 def _extract_phase(data):
