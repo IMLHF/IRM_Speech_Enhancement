@@ -92,8 +92,12 @@ class SE_MODEL(object):
       biases = tf.get_variable('biases1', [out_size],
                                initializer=tf.constant_initializer(0.0))
       irm = tf.nn.relu(tf.matmul(outputs, weights) + biases)
-      self._activations = tf.reshape(
+      self._activations_t = tf.reshape(
           irm, [self.batch_size, -1, NNET_PARAM.OUTPUT_SIZE])
+
+      # mask clip
+      self._activations = self._activations_t
+      # self._activations = tf.clip_by_value(self._activations_t,-1,1.5)
 
       self._cleaned = self._activations*self._mixed
 
