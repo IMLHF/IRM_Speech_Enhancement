@@ -156,7 +156,7 @@ def _get_waveData1_waveData2_MAX_Volume(file1, noise_file):
     if WAVE_NORM:
       waveMAX = np.max(np.abs(waveData))
       waveData = waveData/waveMAX * 32767 if waveMAX > 0 else waveData
-    return waveData, 0
+    return waveData*1.0, 0
 
   f2 = wave.open(noise_file, 'rb')
   noiseData = np.fromstring(f2.readframes(f2.getnframes()),
