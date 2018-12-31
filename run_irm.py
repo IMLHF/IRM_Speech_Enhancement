@@ -21,7 +21,7 @@ def decode_testSet_get_SDR_Impr():
   pass
 
 
-def show_onewave(decode_ans_dir, name, x_spec, y_spec, x_angle, y_angle, cleaned):
+def show_onewave(decode_ans_dir, name, x_spec, y_spec, x_angle, y_angle, cleaned, mixed_wav):
   # show the 5 data.(wav,spec,sound etc.)
   x_spec = np.array(rmNormalization(x_spec))
   cleaned = np.array(rmNormalization(cleaned))
@@ -30,11 +30,13 @@ def show_onewave(decode_ans_dir, name, x_spec, y_spec, x_angle, y_angle, cleaned
   y_spec = np.array(rmNormalization(y_spec))
 
   # wav_spec(spectrum)
-  utils.spectrum_tool.picture_spec(np.log10(cleaned+0.001),
+  utils.spectrum_tool.picture_spec(np.log10(cleaned+0.5),
                                    decode_ans_dir+'/restore_spec_'+name)
-  utils.spectrum_tool.picture_spec(np.log10(x_spec+0.001),
+  utils.spectrum_tool.picture_spec(np.log10(x_spec+0.5),
                                    decode_ans_dir+'/mixed_spec_'+name)
-  utils.spectrum_tool.picture_spec(np.log10(y_spec+0.001),
+  # TODO RM
+  # x_spec_bak=x_spec
+  utils.spectrum_tool.picture_spec(np.log10(y_spec+0.5),
                                    decode_ans_dir+'/raw_spec_'+name)
 
   x_spec = x_spec * np.exp(x_angle*1j)
@@ -44,7 +46,7 @@ def show_onewave(decode_ans_dir, name, x_spec, y_spec, x_angle, y_angle, cleaned
   elif NNET_PARAM.RESTORE_PHASE == 'MIXED':
     cleaned_spec = cleaned * np.exp(x_angle*1j)
   elif NNET_PARAM.RESTORE_PHASE == 'GRIFFIN_LIM':
-    cleaned_spec = utils.spectrum_tool.griffin_lim(cleaned,
+    cleaned_spec = utils.spectrum_tool.griffin_lim(cleaned, mixed_wav,
                                                    MIXED_AISHELL_PARAM.NFFT,
                                                    MIXED_AISHELL_PARAM.OVERLAP,
                                                    NNET_PARAM.GRIFFIN_ITERNUM)
@@ -83,6 +85,13 @@ def show_onewave(decode_ans_dir, name, x_spec, y_spec, x_angle, y_angle, cleaned
                                    decode_ans_dir +
                                    '/restore_wav_'+name,
                                    framerate)
+  # TODO RM
+  # spec = utils.spectrum_tool.magnitude_spectrum_librosa_stft(reY,512,256)
+  # utils.spectrum_tool.picture_spec(np.log10(0.5+spec),decode_ans_dir+'/C7_fu0.3_iter7_')
+  # spec_subs = spec - x_spec_bak
+  # utils.spectrum_tool.picture_spec(np.log10(0.5+spec_subs),decode_ans_dir+'/error')
+  # utils.spectrum_tool.picture_spec(spec_subs,decode_ans_dir+'/log_error')
+  #
   utils.spectrum_tool.picture_wave(rawY,
                                    decode_ans_dir +
                                    '/raw_wav_' + name,
@@ -100,6 +109,7 @@ def decode_oneset(setname, set_index_list_dir, ckpt_dir='nnet'):
   x_theta = []
   y_theta = []
   lengths = []
+  mixed_wave = []
   for i, index_str in enumerate(dataset_index_strlist):
     uttdir1, uttdir2 = index_str.replace('\n', '').split(' ')
     # print(uttdir1,uttdir2)
@@ -117,6 +127,7 @@ def decode_oneset(setname, set_index_list_dir, ckpt_dir='nnet'):
     y_spec_t = wav_tool._extract_norm_log_mag_spec(uttwave1)
     x_theta_t = wav_tool._extract_phase(mixed_wave_t)
     y_theta_t = wav_tool._extract_phase(uttwave1)
+    mixed_wave.append(mixed_wave_t)
     x_spec.append(x_spec_t)
     y_spec.append(y_spec_t)
     x_theta.append(x_theta_t)
@@ -199,7 +210,7 @@ def decode_oneset(setname, set_index_list_dir, ckpt_dir='nnet'):
                    y_spec[i][:lengths[i-s_site]],
                    x_theta[i][:lengths[i-s_site]],
                    y_theta[i][:lengths[i-s_site]],
-                   cleaned[i-s_site][:lengths[i-s_site]])
+                   cleaned[i-s_site][:lengths[i-s_site]], mixed_wave[i])
     e_time = time.time()-s_time
     print("One batch time: ",e_time)
 

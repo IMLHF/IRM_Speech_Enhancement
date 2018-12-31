@@ -12,7 +12,9 @@ def picture_spec(spec, name):
     # spec_t=spec[i]
   spec_t = spec
   # print(np.shape(spec_t),name)
+  plt.figure(figsize=(5, 12))
   plt.pcolormesh(spec_t)
+  # la.display.specshow()
   plt.title('STFT Magnitude')
   plt.xlabel('Frequency')
   plt.ylabel('Time')
@@ -68,10 +70,11 @@ def librosa_istft(magnitude_complex, NFFT, overlap):
   return tmp
 
 
-def griffin_lim(spec, NFFT, overlap, max_iter, wave_bits=16):
-  y = np.random.random(np.shape(librosa_istft(spec,
-                                              NFFT=NFFT,
-                                              overlap=overlap,)))
+def griffin_lim(spec, mixed_wav, NFFT, overlap, max_iter, wave_bits=16):
+  # y = np.random.random(np.shape(librosa_istft(spec,
+  #                                             NFFT=NFFT,
+  #                                             overlap=overlap,)))
+  y = mixed_wav
   for i in range(max_iter-1):
     stft_matrix = librosa.core.stft(y,
                                     n_fft=NFFT,
