@@ -291,8 +291,8 @@ class C9_NNET:
   MASK_TYPE = "PSIRM"  # or 'PSIRM'
   LOSS_FUNC = loss.reduce_sum_frame_batchsize_MSE_LOW_FS_IMPROVE # "MSE" "MSE_LOW_FS_IMPROVE"
   MODEL_TYPE = 'BLSTM'  # 'BLSTM' or 'BGRU'
-  INPUT_SIZE = 257
-  OUTPUT_SIZE = 257
+  INPUT_SIZE = 513
+  OUTPUT_SIZE = 513
   LSTM_num_proj = 128
   RNN_SIZE = 512
   LSTM_ACTIVATION = 'tanh'
@@ -462,7 +462,7 @@ class C10_DATA:
   MIN_COEF = 0
 
   # TFRECORDS_DIR = '/feature_tfrecords_utt03s_irm' # for docker
-  TFRECORDS_DIR = '/home/room/work/lhf/alldata/irm_data/feature_tfrecords_mag_utt03s_irm_1024fft'
+  TFRECORDS_DIR = '/home/room/work/lhf/alldata/irm_data/feature_tfrecords_logmag_utt03s_irm_1024fft'
 
 NNET_PARAM = C8_NNET
 MIXED_AISHELL_PARAM = C8_DATA
