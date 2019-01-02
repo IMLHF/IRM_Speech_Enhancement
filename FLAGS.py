@@ -32,7 +32,7 @@ class C6_NNET:
   end_halving_impr = 0.0005
   # The num of threads to read tfrecords files.
   num_threads_processing_data = 16
-  decode_output_norm_speaker_volume = True
+  decode_output_speaker_volume_amp = True
   RESTORE_PHASE = 'GRIFFIN_LIM'  # 'MIXED','CLEANED','GRIFFIN_LIM'.
   GRIFFIN_ITERNUM = 50
 
@@ -77,8 +77,8 @@ class C6_DATA:
   MAG_NORM_MIN = 0
 
 
-  MAX_VOLUME=True
-  WAVE_NORM = MAX_VOLUME
+  AUDIO_VOLUME_AMP=True
+
 
   MIX_METHOD = 'LINEAR' # "LINEAR" "SNR"
   MAX_SNR = 9  # 以不同信噪比混合
@@ -125,7 +125,7 @@ class C7_NNET:
   end_halving_impr = 0.0005
   # The num of threads to read tfrecords files.
   num_threads_processing_data = 16
-  decode_output_norm_speaker_volume = True
+  decode_output_speaker_volume_amp = True
   RESTORE_PHASE = 'GRIFFIN_LIM'  # 'MIXED','CLEANED','GRIFFIN_LIM'.
   GRIFFIN_ITERNUM = 50
 
@@ -170,8 +170,8 @@ class C7_DATA:
   MAG_NORM_MIN = 0
 
 
-  MAX_VOLUME=True
-  WAVE_NORM = MAX_VOLUME
+  AUDIO_VOLUME_AMP=True
+
 
   MIX_METHOD = 'LINEAR' # "LINEAR" "SNR"
   MAX_SNR = 9  # 以不同信噪比混合
@@ -223,7 +223,7 @@ class C8_NNET:
   end_halving_impr = 0.0005
   # The num of threads to read tfrecords files.
   num_threads_processing_data = 16
-  decode_output_norm_speaker_volume = False
+  decode_output_speaker_volume_amp = False
   RESTORE_PHASE = 'GRIFFIN_LIM'  # 'MIXED','CLEANED','GRIFFIN_LIM'.
   GRIFFIN_ITERNUM = 50
 
@@ -267,9 +267,7 @@ class C8_DATA:
   MAG_NORM_MAX = 1e6
   MAG_NORM_MIN = 0
 
-
-  MAX_VOLUME=False
-  WAVE_NORM = MAX_VOLUME
+  AUDIO_VOLUME_AMP=False
 
   MIX_METHOD = 'LINEAR' # "LINEAR" "SNR"
   MAX_SNR = 9  # 以不同信噪比混合
@@ -321,7 +319,7 @@ class C9_NNET:
   end_halving_impr = 0.0005
   # The num of threads to read tfrecords files.
   num_threads_processing_data = 16
-  decode_output_norm_speaker_volume = False
+  decode_output_speaker_volume_amp = False
   RESTORE_PHASE = 'GRIFFIN_LIM'  # 'MIXED','CLEANED','GRIFFIN_LIM'.
   GRIFFIN_ITERNUM = 50
 
@@ -365,9 +363,7 @@ class C9_DATA:
   MAG_NORM_MAX = 1e6
   MAG_NORM_MIN = 0
 
-
-  MAX_VOLUME=False
-  WAVE_NORM = MAX_VOLUME
+  AUDIO_VOLUME_AMP=False
 
   MIX_METHOD = 'LINEAR' # "LINEAR" "SNR"
   MAX_SNR = 9  # 以不同信噪比混合

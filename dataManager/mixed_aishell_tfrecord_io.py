@@ -12,36 +12,9 @@ import wave
 import utils
 from utils import spectrum_tool
 from FLAGS import NNET_PARAM
-from FLAGS import MIXED_AISHELL_PARAM
+from FLAGS import MIXED_AISHELL_PARAM as DATA_PARAM
 
 FILE_NAME = __file__[max(__file__.rfind('/')+1, 0):__file__.rfind('.')]
-# region define
-DATA_DICT_DIR = MIXED_AISHELL_PARAM.DATA_DICT_DIR
-RAW_DATA = MIXED_AISHELL_PARAM.RAW_DATA
-TFRECORD_DIR = MIXED_AISHELL_PARAM.TFRECORDS_DIR
-PROCESS_NUM_GENERATE_TFERCORD = MIXED_AISHELL_PARAM.PROCESS_NUM_GENERATE_TFERCORD
-TFRECORDS_NUM = MIXED_AISHELL_PARAM.TFRECORDS_NUM
-FEATURE_TYPE = MIXED_AISHELL_PARAM.FEATURE_TYPE
-LOG_NORM_MAX = MIXED_AISHELL_PARAM.LOG_NORM_MAX
-LOG_NORM_MIN = MIXED_AISHELL_PARAM.LOG_NORM_MIN
-MAG_NORM_MAX = MIXED_AISHELL_PARAM.MAG_NORM_MAX
-MAG_NORM_MIN = MIXED_AISHELL_PARAM.MAG_NORM_MIN
-NFFT = MIXED_AISHELL_PARAM.NFFT
-OVERLAP = MIXED_AISHELL_PARAM.OVERLAP
-FS = MIXED_AISHELL_PARAM.FS
-LEN_WAWE_PAD_TO = MIXED_AISHELL_PARAM.LEN_WAWE_PAD_TO
-UTT_SEG_FOR_MIX = MIXED_AISHELL_PARAM.UTT_SEG_FOR_MIX
-DATASET_NAMES = MIXED_AISHELL_PARAM.DATASET_NAMES
-DATASET_SIZES = MIXED_AISHELL_PARAM.DATASET_SIZES
-WAVE_NORM = MIXED_AISHELL_PARAM.WAVE_NORM
-NOISE_DIR = MIXED_AISHELL_PARAM.NOISE_DIR
-MAX_SNR = MIXED_AISHELL_PARAM.MAX_SNR
-MIN_SNR = MIXED_AISHELL_PARAM.MIN_SNR
-MAX_COEF = MIXED_AISHELL_PARAM.MAX_COEF
-MIN_COEF = MIXED_AISHELL_PARAM.MIN_COEF
-MIX_METHOD = MIXED_AISHELL_PARAM.MIX_METHOD
-
-# endregion
 
 
 def _bytes_feature(value):
@@ -79,16 +52,16 @@ def _ini_data(wave_dir, noise_dir, out_dir):
     if os.path.isdir(speaker_dir):
       speaker_wav_list = os.listdir(speaker_dir)
       speaker_wav_list.sort()
-      for wav in speaker_wav_list[:UTT_SEG_FOR_MIX[0]]:
+      for wav in speaker_wav_list[:DATA_PARAM.UTT_SEG_FOR_MIX[0]]:
         # 清洗长度为0的数据
         if wav[-4:] == ".wav" and os.path.getsize(speaker_dir+'/'+wav) > 2048:
           cwl_train_file.write(speaker_dir+'/'+wav+'\n')
           clean_wav_list_train.append(speaker_dir+'/'+wav)
-      for wav in speaker_wav_list[UTT_SEG_FOR_MIX[0]:UTT_SEG_FOR_MIX[1]]:
+      for wav in speaker_wav_list[DATA_PARAM.UTT_SEG_FOR_MIX[0]:DATA_PARAM.UTT_SEG_FOR_MIX[1]]:
         if wav[-4:] == ".wav" and os.path.getsize(speaker_dir+'/'+wav) > 2048:
           cwl_validation_file.write(speaker_dir+'/'+wav+'\n')
           clean_wav_list_validation.append(speaker_dir+'/'+wav)
-      for wav in speaker_wav_list[UTT_SEG_FOR_MIX[1]:]:
+      for wav in speaker_wav_list[DATA_PARAM.UTT_SEG_FOR_MIX[1]:]:
         if wav[-4:] == ".wav" and os.path.getsize(speaker_dir+'/'+wav) > 2048:
           cwl_test_cc_file.write(speaker_dir+'/'+wav+'\n')
           clean_wav_list_test_cc.append(speaker_dir+'/'+wav)
@@ -104,8 +77,8 @@ def _ini_data(wave_dir, noise_dir, out_dir):
   noise_wav_list = os.listdir(noise_dir)
   noise_wav_list = [os.path.join(noise_dir, noise) for noise in noise_wav_list]
 
-  dataset_names = DATASET_NAMES
-  dataset_mixedutt_num = DATASET_SIZES
+  dataset_names = DATA_PARAM.DATASET_NAMES
+  dataset_mixedutt_num = DATA_PARAM.DATASET_SIZES
   all_mixed = 0
   all_stime = time.time()
   for (clean_wav_list, j) in zip((clean_wav_list_train, clean_wav_list_validation, clean_wav_list_test_cc), range(3)):
@@ -153,7 +126,7 @@ def _get_waveData1_waveData2_MAX_Volume(file1, noise_file):
   f1.close()
 
   if noise_file == 'None':
-    if WAVE_NORM:
+    if DATA_PARAM.AUDIO_VOLUME_AMP:
       waveMAX = np.max(np.abs(waveData))
       waveData = waveData/waveMAX * 32767 if waveMAX > 0 else waveData
     return waveData*1.0, 0
@@ -162,24 +135,24 @@ def _get_waveData1_waveData2_MAX_Volume(file1, noise_file):
   noiseData = np.fromstring(f2.readframes(f2.getnframes()),
                             dtype=np.int16)
   f2.close()
-  while len(waveData) < LEN_WAWE_PAD_TO:
+  while len(waveData) < DATA_PARAM.LEN_WAWE_PAD_TO:
     waveData = np.tile(waveData, 2)
-  while len(noiseData) < LEN_WAWE_PAD_TO:
+  while len(noiseData) < DATA_PARAM.LEN_WAWE_PAD_TO:
     noiseData = np.tile(noiseData, 2)
 
   # wave random trunc(only when training)
   if NNET_PARAM.decode:
-    waveData = waveData[:LEN_WAWE_PAD_TO]
+    waveData = waveData[:DATA_PARAM.LEN_WAWE_PAD_TO]
   else:
     len_wave = len(waveData)
-    wave_begin = np.random.randint(len_wave-LEN_WAWE_PAD_TO+1)
-    waveData = waveData[wave_begin:wave_begin+LEN_WAWE_PAD_TO]
+    wave_begin = np.random.randint(len_wave-DATA_PARAM.LEN_WAWE_PAD_TO+1)
+    waveData = waveData[wave_begin:wave_begin+DATA_PARAM.LEN_WAWE_PAD_TO]
 
   # noise random trunc
   len_noise = len(noiseData)
-  noise_begin = np.random.randint(len_noise-LEN_WAWE_PAD_TO+1)
-  noiseData = noiseData[noise_begin:noise_begin+LEN_WAWE_PAD_TO]
-  if WAVE_NORM:
+  noise_begin = np.random.randint(len_noise-DATA_PARAM.LEN_WAWE_PAD_TO+1)
+  noiseData = noiseData[noise_begin:noise_begin+DATA_PARAM.LEN_WAWE_PAD_TO]
+  if DATA_PARAM.AUDIO_VOLUME_AMP:
     waveMAX = np.max(np.abs(waveData))
     noiseMAX = np.max(np.abs(noiseData))
     waveData = waveData/waveMAX * 32767 if waveMAX > 0 else waveData
@@ -196,7 +169,7 @@ def _mix_wav(waveData1, waveData2):
 
 def _mix_wav_by_SNR(waveData, noise):
   # S = (speech+alpha*noise)/(1+alpha)
-  snr = np.random.randint(MIN_SNR, MAX_SNR+1)
+  snr = np.random.randint(DATA_PARAM.MIN_SNR, DATA_PARAM.MAX_SNR+1)
   As = np.mean(waveData**2)
   An = np.mean(noise**2)
 
@@ -207,18 +180,20 @@ def _mix_wav_by_SNR(waveData, noise):
 
 
 def _mix_wav_LINEAR(waveData, noise):
-  coef = np.random.random()*(MAX_COEF-MIN_COEF)+MIN_COEF
+  coef = np.random.random()*(DATA_PARAM.MAX_COEF-DATA_PARAM.MIN_COEF)+DATA_PARAM.MIN_COEF
   waveMix = (waveData+coef*noise)/(1.0+coef)
   return waveMix
 
 
 def rmNormalization(tmp):
-  if FEATURE_TYPE == 'LOG_MAG':
-    tmp = (10**(tmp*(LOG_NORM_MAX-LOG_NORM_MIN)+LOG_NORM_MIN))-0.5
+  if DATA_PARAM.FEATURE_TYPE == 'LOG_MAG':
+    tmp = (10**(tmp*(DATA_PARAM.LOG_NORM_MAX -
+                     DATA_PARAM.LOG_NORM_MIN)+DATA_PARAM.LOG_NORM_MIN))-0.5
     ans = np.where(tmp > 0, tmp, 0)  # 防止计算误差导致的反归一化结果为负数
     return ans
-  elif FEATURE_TYPE == 'MAG':
-    tmp = tmp*(MAG_NORM_MAX-MAG_NORM_MIN)+MAG_NORM_MIN
+  elif DATA_PARAM.FEATURE_TYPE == 'MAG':
+    tmp = tmp*(DATA_PARAM.MAG_NORM_MAX -
+               DATA_PARAM.MAG_NORM_MIN)+DATA_PARAM.MAG_NORM_MIN
     # tmp = np.where(tmp > 0, tmp, 0)
     return tmp
 
@@ -226,8 +201,8 @@ def rmNormalization(tmp):
 def _extract_norm_log_mag_spec(data):
   # 归一化的幅度谱对数
   mag_spec = spectrum_tool.magnitude_spectrum_librosa_stft(
-      data, NFFT, OVERLAP)
-  if FEATURE_TYPE == 'LOG_MAG':
+      data, DATA_PARAM.NFFT, DATA_PARAM.OVERLAP)
+  if DATA_PARAM.FEATURE_TYPE == 'LOG_MAG':
     # Normalization
     log_mag_spec = np.log10(mag_spec+0.5)
     # #TODO
@@ -236,24 +211,26 @@ def _extract_norm_log_mag_spec(data):
     #       np.mean(log_mag_spec),
     #       np.var(log_mag_spec),
     #       np.sqrt(np.var(log_mag_spec)))
-    log_mag_spec[log_mag_spec > LOG_NORM_MAX] = LOG_NORM_MAX
-    log_mag_spec[log_mag_spec < LOG_NORM_MIN] = LOG_NORM_MIN
-    log_mag_spec -= LOG_NORM_MIN
-    log_mag_spec /= (LOG_NORM_MAX - LOG_NORM_MIN)
+    log_mag_spec[log_mag_spec > DATA_PARAM.LOG_NORM_MAX] = DATA_PARAM.LOG_NORM_MAX
+    log_mag_spec[log_mag_spec < DATA_PARAM.LOG_NORM_MIN] = DATA_PARAM.LOG_NORM_MIN
+    log_mag_spec -= DATA_PARAM.LOG_NORM_MIN
+    log_mag_spec /= (DATA_PARAM.LOG_NORM_MAX - DATA_PARAM.LOG_NORM_MIN)
     # mean=np.mean(log_mag_spec)
     # var=np.var(log_mag_spec)
     # log_mag_spec=(log_mag_spec-mean)/var
     return log_mag_spec
-  elif FEATURE_TYPE == 'MAG':
-    mag_spec[mag_spec > MAG_NORM_MAX] = MAG_NORM_MAX
-    mag_spec[mag_spec < MAG_NORM_MIN] = MAG_NORM_MIN
-    mag_spec -= MAG_NORM_MIN
-    mag_spec /= (MAG_NORM_MAX-MAG_NORM_MIN)
+  elif DATA_PARAM.FEATURE_TYPE == 'MAG':
+    mag_spec[mag_spec > DATA_PARAM.MAG_NORM_MAX] = DATA_PARAM.MAG_NORM_MAX
+    mag_spec[mag_spec < DATA_PARAM.MAG_NORM_MIN] = DATA_PARAM.MAG_NORM_MIN
+    mag_spec -= DATA_PARAM.MAG_NORM_MIN
+    mag_spec /= (DATA_PARAM.MAG_NORM_MAX - DATA_PARAM.MAG_NORM_MIN)
     return mag_spec
 
 
 def _extract_phase(data):
-  theta = spectrum_tool.phase_spectrum_librosa_stft(data, NFFT, OVERLAP)
+  theta = spectrum_tool.phase_spectrum_librosa_stft(data,
+                                                    DATA_PARAM.NFFT,
+                                                    DATA_PARAM.OVERLAP)
   return theta
 
 
@@ -261,9 +238,9 @@ def _extract_feature_x_y_xtheta_ytheta(utt_dir1, utt_dir2):
   waveData1, waveData2 = _get_waveData1_waveData2_MAX_Volume(
       utt_dir1, utt_dir2)
   # utt2作为噪音
-  if MIX_METHOD == 'SNR':
+  if DATA_PARAM.MIX_METHOD == 'SNR':
     mixedData = _mix_wav_by_SNR(waveData1, waveData2)
-  if MIX_METHOD == 'LINEAR':
+  if DATA_PARAM.MIX_METHOD == 'LINEAR':
     mixedData = _mix_wav_LINEAR(waveData1, waveData2)
 
   # write mixed wav
@@ -356,7 +333,7 @@ def _gen_tfrecord_minprocess(
 
 
 def generate_tfrecord(gen=True):
-  tfrecords_dir = TFRECORD_DIR
+  tfrecords_dir = DATA_PARAM.TFRECORDS_DIR
   train_tfrecords_dir = os.path.join(tfrecords_dir, 'train')
   val_tfrecords_dir = os.path.join(tfrecords_dir, 'validation')
   testcc_tfrecords_dir = os.path.join(tfrecords_dir, 'test_cc')
@@ -365,7 +342,7 @@ def generate_tfrecord(gen=True):
                       testcc_tfrecords_dir]
 
   if gen:
-    _ini_data(RAW_DATA, NOISE_DIR, DATA_DICT_DIR)
+    _ini_data(DATA_PARAM.RAW_DATA, DATA_PARAM.NOISE_DIR, DATA_PARAM.DATA_DICT_DIR)
     if os.path.exists(train_tfrecords_dir):
       shutil.rmtree(train_tfrecords_dir)
     if os.path.exists(val_tfrecords_dir):
@@ -396,12 +373,12 @@ def generate_tfrecord(gen=True):
                              index_[1].replace(' ', '')] for index_ in dataset_index_list]
       len_dataset = len(dataset_index_list)
       minprocess_utt_num = int(
-          len_dataset/TFRECORDS_NUM)
-      pool = multiprocessing.Pool(PROCESS_NUM_GENERATE_TFERCORD)
-      for i_process in range(TFRECORDS_NUM):
+          len_dataset/DATA_PARAM.TFRECORDS_NUM)
+      pool = multiprocessing.Pool(DATA_PARAM.PROCESS_NUM_GENERATE_TFERCORD)
+      for i_process in range(DATA_PARAM.TFRECORDS_NUM):
         s_site = i_process*minprocess_utt_num
         e_site = s_site+minprocess_utt_num
-        if i_process == (TFRECORDS_NUM-1):
+        if i_process == (DATA_PARAM.TFRECORDS_NUM-1):
           e_site = len_dataset
         # print(s_site,e_site)
         pool.apply_async(_gen_tfrecord_minprocess,
@@ -431,10 +408,10 @@ def generate_tfrecord(gen=True):
 
 def get_batch_use_tfdata(tfrecords_list, get_theta=False):
   files = tf.data.Dataset.list_files(tfrecords_list)
-  files = files.take(MIXED_AISHELL_PARAM.MAX_TFRECORD_FILES_USED)
-  if MIXED_AISHELL_PARAM.SHUFFLE:
-    files = files.shuffle(MIXED_AISHELL_PARAM.PROCESS_NUM_GENERATE_TFERCORD)
-  if not MIXED_AISHELL_PARAM.SHUFFLE:
+  files = files.take(DATA_PARAM.MAX_TFRECORD_FILES_USED)
+  if DATA_PARAM.SHUFFLE:
+    files = files.shuffle(DATA_PARAM.PROCESS_NUM_GENERATE_TFERCORD)
+  if not DATA_PARAM.SHUFFLE:
     dataset = files.interleave(tf.data.TFRecordDataset,
                                cycle_length=1,
                                block_length=NNET_PARAM.batch_size,
@@ -446,7 +423,7 @@ def get_batch_use_tfdata(tfrecords_list, get_theta=False):
                                #  block_length=1,
                                num_parallel_calls=NNET_PARAM.num_threads_processing_data,
                                )
-  if MIXED_AISHELL_PARAM.SHUFFLE:
+  if DATA_PARAM.SHUFFLE:
     dataset = dataset.shuffle(NNET_PARAM.batch_size*3)
   # region
   # !tf.data with tf.device(cpu) OOM???
@@ -475,12 +452,12 @@ def get_batch_use_tfdata(tfrecords_list, get_theta=False):
 
 def _get_batch_use_tfdata(tfrecords_list, get_theta=False):
   files = os.listdir(tfrecords_list[:-11])
-  files = files[:min(MIXED_AISHELL_PARAM.MAX_TFRECORD_FILES_USED, len(files))]
+  files = files[:min(DATA_PARAM.MAX_TFRECORD_FILES_USED, len(files))]
   files = [os.path.join(tfrecords_list[:-11], file) for file in files]
   dataset_list = [tf.data.TFRecordDataset(file).map(parse_func_with_theta if get_theta else parse_func,
                                                     num_parallel_calls=NNET_PARAM.num_threads_processing_data) for file in files]
 
-  num_classes = MIXED_AISHELL_PARAM.MAX_TFRECORD_FILES_USED
+  num_classes = DATA_PARAM.MAX_TFRECORD_FILES_USED
   num_classes_per_batch = NNET_PARAM.batch_size
   num_utt_per_class = NNET_PARAM.batch_size//num_classes_per_batch
 
