@@ -192,8 +192,8 @@ def rmNormalization(_tmp):
     ans = np.where(tmp > 0, tmp, 0)  # 防止计算误差导致的反归一化结果为负数
     return ans
   elif DATA_PARAM.FEATURE_TYPE == 'MAG':
-    tmp = tmp*(DATA_PARAM.MAG_NORM_MAX -
-               DATA_PARAM.MAG_NORM_MIN)+DATA_PARAM.MAG_NORM_MIN
+    tmp = _tmp*(DATA_PARAM.MAG_NORM_MAX -
+                DATA_PARAM.MAG_NORM_MIN)+DATA_PARAM.MAG_NORM_MIN
     # tmp = np.where(tmp > 0, tmp, 0)
     return tmp
 
