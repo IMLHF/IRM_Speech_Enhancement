@@ -297,8 +297,8 @@ def _gen_tfrecord_minprocess(
   with tf.python_io.TFRecordWriter(tfrecord_savedir) as writer:
     for i in range(s_site, e_site):
       index_ = dataset_index_list[i]
-      X_Y_Xtheta_Ytheta = _extract_feature_x_y_xtheta_ytheta(index_[
-                                                             0], index_[1])
+      X_Y_Xtheta_Ytheta = _extract_feature_x_y_xtheta_ytheta(index_[0],
+                                                             index_[1])
       X = np.reshape(np.array(X_Y_Xtheta_Ytheta[0], dtype=np.float32),
                      newshape=[-1, NNET_PARAM.INPUT_SIZE])
       Y = np.reshape(np.array(X_Y_Xtheta_Ytheta[1], dtype=np.float32),
