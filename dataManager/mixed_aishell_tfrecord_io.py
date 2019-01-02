@@ -185,10 +185,10 @@ def _mix_wav_LINEAR(waveData, noise):
   return waveMix
 
 
-def rmNormalization(tmp):
+def rmNormalization(_tmp):
   if DATA_PARAM.FEATURE_TYPE == 'LOG_MAG':
-    tmp = (10**(tmp*(DATA_PARAM.LOG_NORM_MAX -
-                     DATA_PARAM.LOG_NORM_MIN)+DATA_PARAM.LOG_NORM_MIN))-0.5
+    tmp = (10**(_tmp*(DATA_PARAM.LOG_NORM_MAX -
+                      DATA_PARAM.LOG_NORM_MIN)+DATA_PARAM.LOG_NORM_MIN))-0.5
     ans = np.where(tmp > 0, tmp, 0)  # 防止计算误差导致的反归一化结果为负数
     return ans
   elif DATA_PARAM.FEATURE_TYPE == 'MAG':

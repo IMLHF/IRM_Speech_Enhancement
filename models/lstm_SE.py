@@ -5,7 +5,9 @@ import time
 import sys
 from tensorflow.contrib.rnn.python.ops import rnn
 from FLAGS import NNET_PARAM
+from FLAGS import MIXED_AISHELL_PARAM as DATA_PARAM
 from utils import tf_tool
+from dataManager import mixed_aishell_tfrecord_io as data_tool
 
 
 class SE_MODEL(object):
@@ -91,18 +93,47 @@ class SE_MODEL(object):
                                 initializer=tf.random_normal_initializer(stddev=0.01))
       biases = tf.get_variable('biases1', [out_size],
                                initializer=tf.constant_initializer(0.0))
-      irm = tf.nn.relu(tf.matmul(outputs, weights) + biases)
+      mask = tf.nn.relu(tf.matmul(outputs, weights) + biases)
       self._activations_t = tf.reshape(
-          irm, [self.batch_size, -1, NNET_PARAM.OUTPUT_SIZE])
+          mask, [self.batch_size, -1, NNET_PARAM.OUTPUT_SIZE])
 
       # mask clip
       self._activations = self._activations_t
       # self._activations = tf.clip_by_value(self._activations_t,-1,1.5)
 
-      self._cleaned = self._activations*self._mixed
+      masked_mag = None
+      if DATA_PARAM.FEATURE_TYPE == 'LOG_MAG' and DATA_PARAM.MASK_ON_MAG_EVEN_LOGMAG:
+        mag = data_tool.rmNormalization(self._mixed)
+
+        # norm to (0,1), 大数乘小数会有误差，mask比较小，所以将mag变小。
+        mag = tf.where(mag>DATA_PARAM.MAG_NORM_MAX, DATA_PARAM.MAG_NORM_MAX, mag)
+        mag = tf.where(mag<DATA_PARAM.MAG_NORM_MIN, DATA_PARAM.MAG_NORM_MIN, mag)
+        mag -= DATA_PARAM.MAG_NORM_MIN
+        mag /= (DATA_PARAM.MAG_NORM_MAX - DATA_PARAM.MAG_NORM_MIN)
+
+        # add mask on magnitude spectrum
+        masked_mag = self._activations*mag
+
+        # rm mag norm
+        masked_mag = masked_mag*(DATA_PARAM.MAG_NORM_MAX -
+                                 DATA_PARAM.MAG_NORM_MIN)+DATA_PARAM.MAG_NORM_MIN
+
+        # change to log_mag feature
+        log_masked_mag = tf.log10(masked_mag+0.5)
+        log_masked_mag = tf.where(log_masked_mag > DATA_PARAM.LOG_NORM_MAX,
+                                  DATA_PARAM.LOG_NORM_MAX, log_masked_mag)
+        log_masked_mag = tf.where(log_masked_mag < DATA_PARAM.LOG_NORM_MIN,
+                                  DATA_PARAM.LOG_NORM_MIN, log_masked_mag)
+        log_masked_mag -= DATA_PARAM.LOG_NORM_MIN
+        log_masked_mag /= (DATA_PARAM.LOG_NORM_MAX - DATA_PARAM.LOG_NORM_MIN)
+        self._cleaned = log_masked_mag
+      else:
+        self._cleaned = self._activations*self._mixed
 
     self.saver = tf.train.Saver(tf.trainable_variables(), max_to_keep=30)
     if infer:
+      if DATA_PARAM.FEATURE_TYPE == 'LOG_MAG' and DATA_PARAM.MASK_ON_MAG_EVEN_LOGMAG:
+        self._cleaned = masked_mag
       return
 
     if NNET_PARAM.MASK_TYPE == 'PSIRM':

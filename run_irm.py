@@ -24,7 +24,10 @@ def decode_testSet_get_SDR_Impr():
 def show_onewave(decode_ans_dir, name, x_spec, y_spec, x_angle, y_angle, cleaned, mixed_wav):
   # show the 5 data.(wav,spec,sound etc.)
   x_spec = np.array(rmNormalization(x_spec))
-  cleaned = np.array(rmNormalization(cleaned))
+  if MIXED_AISHELL_PARAM.FEATURE_TYPE == 'LOG_MAG' and MIXED_AISHELL_PARAM.MASK_ON_MAG_EVEN_LOGMAG:
+    cleaned = np.array(cleaned)
+  else:
+    cleaned = np.array(rmNormalization(cleaned))
   # 去噪阈值 #TODO
   # cleaned = np.where(cleaned > 300, cleaned, cleaned/10)
   y_spec = np.array(rmNormalization(y_spec))
@@ -57,7 +60,7 @@ def show_onewave(decode_ans_dir, name, x_spec, y_spec, x_angle, y_angle, cleaned
   # write restore wave
   reY = utils.spectrum_tool.librosa_istft(
       cleaned_spec, MIXED_AISHELL_PARAM.NFFT, MIXED_AISHELL_PARAM.OVERLAP)
-  if NNET_PARAM.decode_output_norm_speaker_volume:  # norm resotred wave
+  if NNET_PARAM.decode_output_speaker_volume_amp:  # norm resotred wave
     reY = reY/np.max(np.abs(reY))*32767
   utils.audio_tool.write_audio(decode_ans_dir+'/restore_audio_'+name+'.wav',
                                reY,
@@ -90,6 +93,8 @@ def show_onewave(decode_ans_dir, name, x_spec, y_spec, x_angle, y_angle, cleaned
   # utils.spectrum_tool.picture_spec(np.log10(0.5+spec),decode_ans_dir+'/C7_fu0.3_iter7_')
   # spec_subs = spec - x_spec_bak
   # utils.spectrum_tool.picture_spec(np.log10(0.5+spec_subs),decode_ans_dir+'/error')
+  # print(np.max(spec_subs[100:]), np.min(spec_subs[100:]))
+  # print(np.shape(spec_subs))
   # utils.spectrum_tool.picture_spec(spec_subs,decode_ans_dir+'/log_error')
   #
   utils.spectrum_tool.picture_wave(rawY,
