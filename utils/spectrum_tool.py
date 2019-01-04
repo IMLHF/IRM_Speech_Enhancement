@@ -42,7 +42,7 @@ def magnitude_spectrum_librosa_stft(signal, NFFT, overlap):
   signal = np.array(signal, dtype=np.float)
   tmp = librosa.core.stft(signal,
                           n_fft=NFFT,
-                          hop_length=overlap,
+                          hop_length=NFFT-overlap,
                           window=scipy.signal.windows.hann)
   tmp = np.absolute(tmp)
   return tmp.T
@@ -55,7 +55,7 @@ def phase_spectrum_librosa_stft(signal, NFFT, overlap):
   signal = np.array(signal, dtype=np.float)
   tmp = librosa.core.stft(signal,
                           n_fft=NFFT,
-                          hop_length=overlap,
+                          hop_length=NFFT-overlap,
                           window=scipy.signal.windows.hann)
   tmp = np.angle(tmp)
   return tmp.T
@@ -65,7 +65,7 @@ def phase_spectrum_librosa_stft(signal, NFFT, overlap):
 def librosa_istft(magnitude_complex, NFFT, overlap):
   tmp = librosa.core.istft(magnitude_complex.T,
                            win_length=NFFT,
-                           hop_length=overlap,
+                           hop_length=NFFT-overlap,
                            window=scipy.signal.windows.hann)
   return tmp
 
