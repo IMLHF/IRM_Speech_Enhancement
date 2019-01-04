@@ -21,7 +21,7 @@ def decode_testSet_get_SDR_Impr():
   pass
 
 
-def show_onewave(decode_ans_dir, name, x_spec, y_spec, x_angle, y_angle, cleaned, mixed_wav):
+def show_onewave(decode_ans_dir, name, x_spec, y_spec, x_angle, y_angle, cleaned, mixed_wav, mask):
   # show the 5 data.(wav,spec,sound etc.)
   x_spec = np.array(rmNormalization(x_spec))
   if MIXED_AISHELL_PARAM.FEATURE_TYPE == 'LOG_MAG' and MIXED_AISHELL_PARAM.MASK_ON_MAG_EVEN_LOGMAG:
@@ -41,6 +41,10 @@ def show_onewave(decode_ans_dir, name, x_spec, y_spec, x_angle, y_angle, cleaned
   # x_spec_bak=x_spec
   utils.spectrum_tool.picture_spec(np.log10(y_spec+0.5),
                                    decode_ans_dir+'/raw_spec_'+name)
+
+  # mask_spec
+  utils.spectrum_tool.picture_spec(mask,
+                                   decode_ans_dir+'/mask_'+name)
 
   x_spec = x_spec * np.exp(x_angle*1j)
   y_spec = y_spec * np.exp(y_angle*1j)
@@ -215,7 +219,9 @@ def decode_oneset(setname, set_index_list_dir, ckpt_dir='nnet'):
                    y_spec[i][:lengths[i-s_site]],
                    x_theta[i][:lengths[i-s_site]],
                    y_theta[i][:lengths[i-s_site]],
-                   cleaned[i-s_site][:lengths[i-s_site]], mixed_wave[i])
+                   cleaned[i-s_site][:lengths[i-s_site]],
+                   mixed_wave[i],
+                   mask[i-s_site][:lengths[i-s_site]])
     e_time = time.time()-s_time
     print("One batch time: ",e_time)
 
