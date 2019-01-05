@@ -1,6 +1,6 @@
 from losses import loss
 
-class C6_NNET:
+class C3_NNET:
   MASK_TYPE = "IRM"  # or 'PSIRM'
   LOSS_FUNC = loss.reduce_sum_frame_batchsize_MSE_LOW_FS_IMPROVE # "MSE" "MSE_LOW_FS_IMPROVE"
   MODEL_TYPE = 'BLSTM'  # 'BLSTM' or 'BGRU'
@@ -33,7 +33,7 @@ class C6_NNET:
   end_halving_impr = 0.0005
   # The num of threads to read tfrecords files.
   num_threads_processing_data = 16
-  decode_output_speaker_volume_amp = False
+  decode_output_speaker_volume_amp = True
   RESTORE_PHASE = 'GRIFFIN_LIM'  # 'MIXED','CLEANED','GRIFFIN_LIM'.
   GRIFFIN_ITERNUM = 50
 
@@ -52,10 +52,10 @@ class C6_NNET:
 
 class C3_DATA:
   # rawdata, dirs by speakerid, like "....data_aishell/wav/train".
-  # RAW_DATA = '/aishell_90_speaker' # for docker
+  #RAW_DATA = '/all_data/aishell2_speaker_list' # for docker
   RAW_DATA = '/home/room/work/lhf/alldata/aishell2_speaker_list'
   DATA_DICT_DIR = '_data/mixed_aishell'
-  GENERATE_TFRECORD = False
+  GENERATE_TFRECORD = True
   PROCESS_NUM_GENERATE_TFERCORD = 16
   TFRECORDS_NUM = 160  # 提多少，后面设置MAX_TFRECORD_FILES_USED表示用多少
   SHUFFLE = False
@@ -67,6 +67,7 @@ class C3_DATA:
 
   MAX_TFRECORD_FILES_USED=160 # <=TFRECORDS_NUM
 
+  #NOISE_DIR = '/all_data/many_noise' # for docker
   NOISE_DIR = '/home/room/work/lhf/alldata/many_noise'
   NFFT = 512
   OVERLAP = NFFT - 256
@@ -79,7 +80,7 @@ class C3_DATA:
   MAG_NORM_MIN = 0
 
 
-  AUDIO_VOLUME_AMP=False
+  AUDIO_VOLUME_AMP=True
 
 
   MIX_METHOD = 'LINEAR' # "LINEAR" "SNR"
@@ -89,13 +90,11 @@ class C3_DATA:
   MAX_COEF = 1.0  # 以不同系数混合
   MIN_COEF = 0
 
-  # TFRECORDS_DIR = '/feature_tfrecords_utt03s_irm' # for docker
+  # TFRECORDS_DIR = '/all_data/feature_tfrecords' # for docker
   TFRECORDS_DIR = '/home/room/work/lhf/alldata/irm_data/feature_tfrecords_utt03s_irm'
-  if MIX_METHOD =='SNR':
-    TFRECORDS_DIR = '/home/room/work/lhf/alldata/irm_data/feature_tfrecords_utt03s_irm_SNR_MIX'
 
 
-class C3_NNET:
+class C6_NNET:
   MASK_TYPE = "IRM"  # or 'PSIRM'
   LOSS_FUNC = loss.reduce_sum_frame_batchsize_MSE_LOW_FS_IMPROVE # "MSE" "MSE_LOW_FS_IMPROVE"
   MODEL_TYPE = 'BLSTM'  # 'BLSTM' or 'BGRU'
@@ -385,7 +384,7 @@ class C8_DATA:
 
 class C9_NNET:
   MASK_TYPE = "PSIRM"  # or 'PSIRM'
-  LOSS_FUNC = loss.reduce_sum_frame_batchsize_MSE_LOW_FS_IMPROVE # "MSE" "MSE_LOW_FS_IMPROVE"
+  LOSS_FUNC = loss.reduce_sum_frame_batchsize_MSE # "MSE" "MSE_LOW_FS_IMPROVE"
   MODEL_TYPE = 'BLSTM'  # 'BLSTM' or 'BGRU'
   INPUT_SIZE = 513
   OUTPUT_SIZE = 513
@@ -560,5 +559,5 @@ class C10_DATA:
   # TFRECORDS_DIR = '/feature_tfrecords_utt03s_irm' # for docker
   TFRECORDS_DIR = '/home/room/work/lhf/alldata/irm_data/feature_tfrecords_logmag_utt03s_irm_1024fft'
 
-NNET_PARAM = C9_NNET
-MIXED_AISHELL_PARAM = C9_DATA
+NNET_PARAM = C3_NNET
+MIXED_AISHELL_PARAM = C3_DATA
