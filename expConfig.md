@@ -1,11 +1,19 @@
-C0:  90 speaker 23400utt[:260:290:320], few_noise, log_mag_norm[-3,6], irm, DATASET_SIZES = [600000, 18000, 100000]
-C1:  400 speaker 108000utt[:270:300:320], few_noise, log_mag_norm[-3,6], irm, DATASET_SIZES = [600000, 18000, 100000]
-C2:  400 speaker 108000utt[:270:300:320], few_noise, log_mag_norm[-0.3,6], irm, DATASET_SIZES = [600000, 18000, 100000]
-C3:  1991 speaker 796400utt[:400:460:520], large_noise, log_mag_norm[-0.3,6], irm, DATASET_SIZES = [600000, 18000, 100000]
-C4:  1991 speaker 796400utt[:400:460:520], large_noise, log_mag_norm[-0.3,6], irm, DATASET_SIZES = [1600000, 18000, 100000]
-C5:  1991 speaker 796400utt[:400:460:520], large_noise, log_mag_norm[-0.3,6], irm, new_loss, DATASET_SIZES = [600000, 18000, 100000]
+C0:  90 speaker 23400utt[:260:290:320], few_noise, log_mag_norm[-3,6], irm, DATASET_SIZES = [600000, 18000, 100000], 0-1_MIX
+C1:  400 speaker 108000utt[:270:300:320], few_noise, log_mag_norm[-3,6], irm, DATASET_SIZES = [600000, 18000, 100000], 0-1_MIX
+C2:  400 speaker 108000utt[:270:300:320], few_noise, log_mag_norm[-0.3,6], irm, DATASET_SIZES = [600000, 18000, 100000], 0-1_MIX
+C3:  1991 speaker 796400utt[:400:460:520], large_noise, log_mag_norm[-0.3,6], irm, DATASET_SIZES = [600000, 18000, 100000], 0-1_MIX
+C4:  1991 speaker 796400utt[:400:460:520], large_noise, log_mag_norm[-0.3,6], psm, DATASET_SIZES = [600000, 18000, 100000], SNR_MIX
+C5:  1991 speaker 796400utt[:400:460:520], large_noise, log_mag_norm[-0.3,6], psm, DATASET_SIZES = [600000, 18000, 100000], 0-1_MIX
+C6:  1991 speaker 796400utt[:400:460:520], large_noise, log_mag_norm[-0.3,6], irm, DATASET_SIZES = [600000, 18000, 100000], 0-1_MIX, loss1_Wrong,
+C7:  1991 speaker 796400utt[:400:460:520], large_noise, mag_norm[0,1e6], irm, DATASET_SIZES = [600000, 18000, 100000], 0-1_MIX, loss2,[512fft,256hop]，网络输入使用幅度谱-网络输出为幅度谱的mask
+C8:  1991 speaker 796400utt[:400:460:520], large_noise, mag_norm[0,1e6], psm, DATASET_SIZES = [600000, 18000, 100000], 0-1_MIX, loss2,[512fft,256hop]，网络输入使用幅度谱-网络输出为幅度谱的mask
+C9:  1991 speaker 796400utt[:400:460:520], large_noise, mag_norm[0,1e6], psm, DATASET_SIZES = [600000, 18000, 100000], 0-1_MIX, loss1,[1024fft,160hop],网络输入使用幅度谱-网络输出为幅度谱的mask
+C10: 1991 speaker 796400utt[:400:460:520], large_noise, log_mag_norm[-0.3,6]&mag_norm[0,1e6], psm, DATASET_SIZES = [600000, 18000, 100000], 0-1_MIX, loss1,[1024fft,160hop],网络输入使用对数谱-输出为幅度谱的mask
 
 
+loss1 = loss.reduce_sum_frame_batchsize_MSE
+loss2 = loss.reduce_sum_frame_batchsize_MSE_LOW_FS_IMPROVE
+loss3 = 联合幅度谱和对数谱
 
 
 
