@@ -1,0 +1,31 @@
+1、安装docker
+  按步骤输入如下命令.
+  1. sudo apt-get install apt-transport-https ca-certificates curl software-properties-common
+  2. curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
+  3. sudo apt-key fingerprint 0EBFCD88
+  4. sudo apt-get install docker-ce
+
+  (注1: ubuntu16.04 LTS 64位版本如上, 其他版本可查阅Docker官网)
+  (注2: 若已经成功安装docker, 忽略第一步)
+
+2、进入/home/$USER/目录，创建文件夹docker，并将Dockfile文件复制到该文件夹。
+cd ~ && mkdir docker && cd docker && cp /xxx/Dockerfile ./
+
+3、构建需要的docker镜像
+docker build -t asr/se .
+
+4、将项目"IRM_Speech_Enhancement"复制到/home/$USER/目录。
+cp /xxx/IRM_Speech_Enhancement ~/ -rf
+
+5、准备训练数据，将训练数据"train_data"复制到指定文件夹。
+cp /xxx/all_data /home/$USER/ -rf
+
+6、运行项目，训练降噪模型。
+docker run --runtime=nvidia -d --name train_psm \
+  -v /home/$USER/IRM_Speech_Enhancement:/work \
+  -v /home/$USER/all_data:/all_data \
+  asr/se \
+  bash /work/run.sh
+
+7、获取模型。
+训练好的模型保存在/home/$USER/IRM_Speech_Enhancement/exp/rnn_irm/nnet中。
