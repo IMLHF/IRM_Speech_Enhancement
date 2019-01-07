@@ -103,11 +103,10 @@ class SE_MODEL(object):
 
       masked_mag = None
       if DATA_PARAM.FEATURE_TYPE == 'LOG_MAG' and DATA_PARAM.MASK_ON_MAG_EVEN_LOGMAG:
-        mag = data_tool.rmNormalization(self._mixed)
+        mag = data_tool.rmNormalization(self._mixed, eager=False)
 
         # norm to (0,1), 大数乘小数会有误差，mask比较小，所以将mag变小。
-        mag = tf.where(mag>DATA_PARAM.MAG_NORM_MAX, DATA_PARAM.MAG_NORM_MAX, mag)
-        mag = tf.where(mag<DATA_PARAM.MAG_NORM_MIN, DATA_PARAM.MAG_NORM_MIN, mag)
+        mag = tf.clip_by_value(mag, DATA_PARAM.MAG_NORM_MIN, DATA_PARAM.MAG_NORM_MAX)
         mag -= DATA_PARAM.MAG_NORM_MIN
         mag /= (DATA_PARAM.MAG_NORM_MAX - DATA_PARAM.MAG_NORM_MIN)
 
@@ -119,11 +118,10 @@ class SE_MODEL(object):
                                  DATA_PARAM.MAG_NORM_MIN)+DATA_PARAM.MAG_NORM_MIN
 
         # change to log_mag feature
-        log_masked_mag = tf.log10(masked_mag+0.5)
-        log_masked_mag = tf.where(log_masked_mag > DATA_PARAM.LOG_NORM_MAX,
-                                  DATA_PARAM.LOG_NORM_MAX, log_masked_mag)
-        log_masked_mag = tf.where(log_masked_mag < DATA_PARAM.LOG_NORM_MIN,
-                                  DATA_PARAM.LOG_NORM_MIN, log_masked_mag)
+        log_masked_mag = tf.log(masked_mag+0.5)/tf.log(10.0)
+        log_masked_mag = tf.clip_by_value(log_masked_mag,
+                                          DATA_PARAM.LOG_NORM_MIN,
+                                          DATA_PARAM.LOG_NORM_MAX)
         log_masked_mag -= DATA_PARAM.LOG_NORM_MIN
         log_masked_mag /= (DATA_PARAM.LOG_NORM_MAX - DATA_PARAM.LOG_NORM_MIN)
         self._cleaned = log_masked_mag

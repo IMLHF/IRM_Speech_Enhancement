@@ -476,8 +476,8 @@ class C10_NNET:
   MASK_TYPE = "PSIRM"  # or 'PSIRM'
   LOSS_FUNC = loss.reduce_sum_frame_batchsize_MSE_LOW_FS_IMPROVE # "MSE" "MSE_LOW_FS_IMPROVE"
   MODEL_TYPE = 'BLSTM'  # 'BLSTM' or 'BGRU'
-  INPUT_SIZE = 257
-  OUTPUT_SIZE = 257
+  INPUT_SIZE = 513
+  OUTPUT_SIZE = 513
   LSTM_num_proj = 128
   RNN_SIZE = 512
   LSTM_ACTIVATION = 'tanh'
