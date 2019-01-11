@@ -118,7 +118,7 @@ class SE_MODEL(object):
                                  DATA_PARAM.MAG_NORM_MIN)+DATA_PARAM.MAG_NORM_MIN
 
         # change to log_mag feature
-        log_masked_mag = tf.log(masked_mag+0.5)/tf.log(10.0)
+        log_masked_mag = tf.log(masked_mag+DATA_PARAM.LOG_BIAS)/tf.log(10.0)
         log_masked_mag = tf.clip_by_value(log_masked_mag,
                                           DATA_PARAM.LOG_NORM_MIN,
                                           DATA_PARAM.LOG_NORM_MAX)

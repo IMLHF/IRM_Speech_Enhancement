@@ -33,13 +33,13 @@ def show_onewave(decode_ans_dir, name, x_spec, y_spec, x_angle, y_angle, cleaned
   y_spec = np.array(rmNormalization(y_spec))
 
   # wav_spec(spectrum)
-  utils.spectrum_tool.picture_spec(np.log10(cleaned+0.5),
+  utils.spectrum_tool.picture_spec(np.log10(cleaned+MIXED_AISHELL_PARAM.LOG_BIAS),
                                    decode_ans_dir+'/restore_spec_'+name)
-  utils.spectrum_tool.picture_spec(np.log10(x_spec+0.5),
+  utils.spectrum_tool.picture_spec(np.log10(x_spec+MIXED_AISHELL_PARAM.LOG_BIAS),
                                    decode_ans_dir+'/mixed_spec_'+name)
   # TODO RM
   # x_spec_bak=x_spec
-  utils.spectrum_tool.picture_spec(np.log10(y_spec+0.5),
+  utils.spectrum_tool.picture_spec(np.log10(y_spec+MIXED_AISHELL_PARAM.LOG_BIAS),
                                    decode_ans_dir+'/raw_spec_'+name)
 
   # mask_spec
@@ -94,9 +94,9 @@ def show_onewave(decode_ans_dir, name, x_spec, y_spec, x_angle, y_angle, cleaned
                                    framerate)
   # TODO RM
   # spec = utils.spectrum_tool.magnitude_spectrum_librosa_stft(reY,512,256)
-  # utils.spectrum_tool.picture_spec(np.log10(0.5+spec),decode_ans_dir+'/C7_fu0.3_iter7_')
+  # utils.spectrum_tool.picture_spec(np.log10(DATA_PARAM.LOG_BIAS+spec),decode_ans_dir+'/C7_fu0.3_iter7_')
   # spec_subs = spec - x_spec_bak
-  # utils.spectrum_tool.picture_spec(np.log10(0.5+spec_subs),decode_ans_dir+'/error')
+  # utils.spectrum_tool.picture_spec(np.log10(DATA_PARAM.LOG_BIAS+spec_subs),decode_ans_dir+'/error')
   # print(np.max(spec_subs[100:]), np.min(spec_subs[100:]))
   # print(np.shape(spec_subs))
   # utils.spectrum_tool.picture_spec(spec_subs,decode_ans_dir+'/log_error')
@@ -296,7 +296,8 @@ def train():
         train_tfrecords, val_tfrecords, testcc_tfrecords = generate_tfrecord(
             gen=MIXED_AISHELL_PARAM.GENERATE_TFRECORD)
         if MIXED_AISHELL_PARAM.GENERATE_TFRECORD:
-          exit(0)  # set gen=True and exit to generate tfrecords
+          print("TFRecords preparation over.")
+          # exit(0)  # set gen=True and exit to generate tfrecords
 
         PSIRM = True if NNET_PARAM.MASK_TYPE == 'PSIRM' else False
         x_batch_tr, y_batch_tr, Xtheta_batch_tr, Ytheta_batch_tr, lengths_batch_tr, iter_train = get_batch_use_tfdata(

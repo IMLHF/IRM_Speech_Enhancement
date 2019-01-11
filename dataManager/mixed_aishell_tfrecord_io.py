@@ -188,7 +188,7 @@ def _mix_wav_LINEAR(waveData, noise):
 def rmNormalization(_tmp, eager=True):
   if DATA_PARAM.FEATURE_TYPE == 'LOG_MAG':
     tmp = (10**(_tmp*(DATA_PARAM.LOG_NORM_MAX -
-                      DATA_PARAM.LOG_NORM_MIN)+DATA_PARAM.LOG_NORM_MIN))-0.5
+                      DATA_PARAM.LOG_NORM_MIN)+DATA_PARAM.LOG_NORM_MIN))-DATA_PARAM.LOG_BIAS
     if eager:
       ans = np.where(tmp > 0, tmp, 0)  # 防止计算误差导致的反归一化结果为负数
     else:
@@ -207,7 +207,7 @@ def _extract_norm_log_mag_spec(data):
       data, DATA_PARAM.NFFT, DATA_PARAM.OVERLAP)
   if DATA_PARAM.FEATURE_TYPE == 'LOG_MAG':
     # Normalization
-    log_mag_spec = np.log10(mag_spec+0.5)
+    log_mag_spec = np.log10(mag_spec+DATA_PARAM.LOG_BIAS)
     # #TODO
     # print('???', np.max(log_mag_spec),
     #       np.min(log_mag_spec),
