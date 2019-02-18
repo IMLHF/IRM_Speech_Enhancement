@@ -8,7 +8,10 @@ C6:  1991 speaker 796400utt[:400:460:520], large_noise, log_mag_norm[-0.3,6], ir
 C7:  1991 speaker 796400utt[:400:460:520], large_noise, mag_norm[0,1e6], irm, DATASET_SIZES = [600000, 18000, 100000], 0-1_MIX, loss2,[512fft,256hop]，网络输入使用幅度谱-网络输出为幅度谱的mask
 C8:  1991 speaker 796400utt[:400:460:520], large_noise, mag_norm[0,1e6], psm, DATASET_SIZES = [600000, 18000, 100000], 0-1_MIX, loss2,[512fft,256hop]，网络输入使用幅度谱-网络输出为幅度谱的mask
 C9:  1991 speaker 796400utt[:400:460:520], large_noise, mag_norm[0,1e6], psm, DATASET_SIZES = [600000, 18000, 100000], 0-1_MIX, loss1,[1024fft,160hop],网络输入使用幅度谱-网络输出为幅度谱的mask
-C10: 1991 speaker 796400utt[:400:460:520], large_noise, log_mag_norm[-0.3,6]&mag_norm[0,1e6], psm, DATASET_SIZES = [600000, 18000, 100000], 0-1_MIX, loss1,[1024fft,160hop],网络输入使用对数谱-输出为幅度谱的mask
+C9-2:   loss2
+C10: 1991 speaker 796400utt[:400:460:520], large_noise, log_mag_norm[-0.3,6]&mag_norm[0,1e6], psm, DATASET_SIZES = [600000, 18000, 100000], 0-1_MIX, loss2,[1024fft,160hop],网络输入使用对数谱-输出为幅度谱的mask-loss为MSE(估计的对数谱,对数谱)
+C11: 网络输入使用对数谱-网络输出为对数谱的mask; log(mag+50/200/1000), 训练时MASK_ON_MAG_EVEN_LOGMAG=None; 解码时MASK_ON_MAG_EVEN_LOGMAG=True
+c11主要有两点，一个是将取对数时的偏移增大，减弱对数谱对噪音的增强；一个是将对数谱的mask直接加到幅度谱上进行解码。
 
 
 loss1 = loss.reduce_sum_frame_batchsize_MSE
