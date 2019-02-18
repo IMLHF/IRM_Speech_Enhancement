@@ -8,6 +8,7 @@ import os
 import shutil
 from models.lstm_SE import SE_MODEL
 import wave
+import gc
 from dataManager import mixed_aishell_tfrecord_io as wav_tool
 from dataManager.mixed_aishell_tfrecord_io import rmNormalization
 from FLAGS import NNET_PARAM
@@ -45,7 +46,6 @@ def show_onewave(decode_ans_dir, name, x_spec, y_spec, x_angle, y_angle, cleaned
   # mask_spec
   utils.spectrum_tool.picture_spec(mask,
                                    decode_ans_dir+'/mask_'+name)
-
   x_spec = x_spec * np.exp(x_angle*1j)
   y_spec = y_spec * np.exp(y_angle*1j)
   if NNET_PARAM.RESTORE_PHASE == 'CLEANED':
@@ -107,7 +107,8 @@ def show_onewave(decode_ans_dir, name, x_spec, y_spec, x_angle, y_angle, cleaned
                                    framerate)
 
 
-def decode_oneset(setname, set_index_list_dir, ckpt_dir='nnet'):
+
+def decode_oneset_old(setname, set_index_list_dir, ckpt_dir='nnet'):
   dataset_index_file = open(set_index_list_dir, 'r')
   dataset_index_strlist = dataset_index_file.readlines()
   if len(dataset_index_strlist) <= 0:
@@ -159,6 +160,7 @@ def decode_oneset(setname, set_index_list_dir, ckpt_dir='nnet'):
   x_theta = np.array(x_theta, dtype=np.float32)
   y_theta = np.array(y_theta, dtype=np.float32)
   lengths = np.array(lengths, dtype=np.int32)
+
 
   g = tf.Graph()
   with g.as_default():
@@ -215,20 +217,146 @@ def decode_oneset(setname, set_index_list_dir, ckpt_dir='nnet'):
     e_site = min(s_site+NNET_PARAM.batch_size, data_len)
     for i in range(s_site, e_site):
       show_onewave(decode_ans_dir, str(i),
-                   x_spec[i][:lengths[i-s_site]],
-                   y_spec[i][:lengths[i-s_site]],
-                   x_theta[i][:lengths[i-s_site]],
-                   y_theta[i][:lengths[i-s_site]],
-                   cleaned[i-s_site][:lengths[i-s_site]],
+                   x_spec[i][:lengths[i]],
+                   y_spec[i][:lengths[i]],
+                   x_theta[i][:lengths[i]],
+                   y_theta[i][:lengths[i]],
+                   cleaned[i-s_site][:lengths[i]],
                    mixed_wave[i],
-                   mask[i-s_site][:lengths[i-s_site]])
+                   mask[i-s_site][:lengths[i]])
     e_time = time.time()-s_time
     print("One batch time: ",e_time)
 
   sess.close()
   tf.logging.info("Decoding done.")
 
+def decode_oneset_new(setname, set_index_list_dir, ckpt_dir='nnet'):
+  dataset_index_file = open(set_index_list_dir, 'r')
+  dataset_index_strlist = dataset_index_file.readlines()
+  if len(dataset_index_strlist) <= 0:
+    print('Set %s have no element.' % setname)
+    return
 
+  decode_ans_dir = os.path.join(
+      NNET_PARAM.SAVE_DIR, 'decode_ans', setname)
+  if os.path.exists(decode_ans_dir):
+    shutil.rmtree(decode_ans_dir)
+  os.makedirs(decode_ans_dir)
+
+  data_len = len(dataset_index_strlist)
+  total_batch = data_len // NNET_PARAM.batch_size if data_len % NNET_PARAM.batch_size == 0 else (
+      data_len // NNET_PARAM.batch_size)+1
+  for i_batch in range(total_batch):
+    s_time = time.time()
+    # region preparation one batch data
+    s_site = i_batch*NNET_PARAM.batch_size
+    e_site = min(s_site+NNET_PARAM.batch_size, data_len)
+    x_spec = []
+    y_spec = []
+    x_theta = []
+    y_theta = []
+    lengths = []
+    mixed_wave = []
+    for i, index_str in enumerate(dataset_index_strlist[s_site:e_site]):
+      uttdir1, uttdir2 = index_str.replace('\n', '').split(' ')
+      # print(uttdir1,uttdir2)
+      uttwave1, uttwave2 = wav_tool._get_waveData1_waveData2_MAX_Volume(
+          uttdir1, uttdir2)
+      if uttdir2 != 'None':  # 将帧级语音和噪音混合后解码
+        if MIXED_AISHELL_PARAM.MIX_METHOD == 'SNR':
+          mixed_wave_t = wav_tool._mix_wav_by_SNR(uttwave1, uttwave2)
+        if MIXED_AISHELL_PARAM.MIX_METHOD == 'LINEAR':
+          mixed_wave_t = wav_tool._mix_wav_by_LINEAR(uttwave1, uttwave2)
+        # mixed_wave_t = wav_tool._mix_wav_by_SNR(uttwave1, uttwave2)
+      else:  # 解码单一混合语音（uttwave1是带有噪声的语音）
+        mixed_wave_t = uttwave1
+      x_spec_t = wav_tool._extract_norm_log_mag_spec(mixed_wave_t)
+      y_spec_t = wav_tool._extract_norm_log_mag_spec(uttwave1)
+      x_theta_t = wav_tool._extract_phase(mixed_wave_t)
+      y_theta_t = wav_tool._extract_phase(uttwave1)
+      mixed_wave.append(mixed_wave_t)
+      x_spec.append(x_spec_t)
+      y_spec.append(y_spec_t)
+      x_theta.append(x_theta_t)
+      y_theta.append(y_theta_t)
+      lengths.append(np.shape(x_spec_t)[0])
+
+    #  multi_single_mixed_wave_test
+    max_length = np.max(lengths)
+    x_spec = [np.pad(x_spec_t, ((0, max_length-lengths[i]), (0, 0)), 'constant', constant_values=0)
+              for i, x_spec_t in enumerate(x_spec)]
+    y_spec = [np.pad(y_spec_t, ((0, max_length-lengths[i]), (0, 0)), 'constant', constant_values=0)
+              for i, y_spec_t in enumerate(y_spec)]
+    x_theta = [np.pad(x_theta_t, ((0, max_length-lengths[i]), (0, 0)), 'constant', constant_values=0)
+               for i, x_theta_t in enumerate(x_theta)]
+    y_theta = [np.pad(y_theta_t, ((0, max_length-lengths[i]), (0, 0)), 'constant', constant_values=0)
+               for i, y_theta_t in enumerate(y_theta)]
+
+    x_spec = np.array(x_spec, dtype=np.float32)
+    y_spec = np.array(y_spec, dtype=np.float32)
+    x_theta = np.array(x_theta, dtype=np.float32)
+    y_theta = np.array(y_theta, dtype=np.float32)
+    lengths = np.array(lengths, dtype=np.int32)
+    # endregion
+
+    # region load model
+    g = tf.Graph()
+    with g.as_default():
+      with tf.device('/cpu:0'):
+        with tf.name_scope('input'):
+          dataset = tf.data.Dataset.from_tensor_slices(
+              (x_spec, y_spec, x_theta, y_theta, lengths))
+          dataset = dataset.batch(NNET_PARAM.batch_size)
+          dataset_iter = dataset.make_one_shot_iterator()
+          # dataset_iter = dataset.make_initializable_iterator()
+          x_batch, y_batch, x_theta_batch, y_theta_batch, lengths_batch = dataset_iter.get_next()
+      with tf.name_scope('model'):
+        model = SE_MODEL(x_batch, y_batch, lengths_batch, x_theta_batch, y_theta_batch,
+                         infer=True)
+      init = tf.group(tf.global_variables_initializer(),
+                      tf.local_variables_initializer())
+      config = tf.ConfigProto()
+      config.gpu_options.allow_growth = True
+      config.allow_soft_placement = True
+      sess = tf.Session(config=config)
+      sess.run(init)
+
+      ckpt = tf.train.get_checkpoint_state(
+          os.path.join(NNET_PARAM.SAVE_DIR, ckpt_dir))
+      if ckpt and ckpt.model_checkpoint_path:
+        tf.logging.info("Restore from " + ckpt.model_checkpoint_path)
+        model.saver.restore(sess, ckpt.model_checkpoint_path)
+      else:
+        tf.logging.fatal("checkpoint not found.")
+        sys.exit(-1)
+    g.finalize()
+    # endregion
+    cleaned, mask = sess.run([model.cleaned,model.mask])
+    for i in range(e_site-s_site):
+      show_onewave(decode_ans_dir, str(i+s_site),
+                   x_spec[i][:lengths[i]],
+                   y_spec[i][:lengths[i]],
+                   x_theta[i][:lengths[i]],
+                   y_theta[i][:lengths[i]],
+                   cleaned[i][:lengths[i]],
+                   mixed_wave[i],
+                   mask[i][:lengths[i]])
+    e_time = time.time()-s_time
+    sess.close()
+    tf.reset_default_graph()
+    del dataset
+    del dataset_iter
+    del g
+    del sess
+    del x_spec
+    del y_spec
+    del x_theta
+    del y_theta
+    del lengths
+    del mixed_wave
+    gc.collect()
+    # time.sleep(20)
+    print("One batch time: ",e_time)
 
 def decode_by_index():
   set_list = os.listdir('_decode_index')
@@ -236,10 +364,10 @@ def decode_by_index():
     if list_file[-4:] == 'list':
       # print(list_file)
       s_time=time.time()
-      decode_oneset(
-          list_file[:-5], os.path.join('_decode_index', list_file), ckpt_dir='nnet')
+      decode_oneset_old(
+          list_file[:-5], os.path.join('_decode_index', list_file), ckpt_dir=NNET_PARAM.CHECK_POINT)
       e_time=time.time()-s_time
-      print("cost Ttime: ",e_time)
+      print("cost Time: ",e_time)
 
 
 def train_one_epoch(sess, tr_model):
