@@ -192,7 +192,7 @@ def rmNormalization(_tmp, eager=True):
     if eager:
       ans = np.where(tmp > 0, tmp, 0)  # 防止计算误差导致的反归一化结果为负数
     else:
-      ans = tf.clip_by_value(tmp,0,tf.reduce_max(tmp))
+      ans = tf.clip_by_value(tmp, 0, tf.reduce_max(tmp))
     return ans
   elif DATA_PARAM.FEATURE_TYPE == 'MAG':
     tmp = _tmp*(DATA_PARAM.MAG_NORM_MAX -
