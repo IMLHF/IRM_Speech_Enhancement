@@ -13,6 +13,7 @@ class C3_NNET:
   RNN_LAYER = 2
   CLIP_NORM = 5.0
   SAVE_DIR = 'exp/rnn_irm'
+  CHECK_POINT = 'nnet'
   '''
   decode:
     decode by the flod '_decode_index'. one set per (.list) file.
@@ -76,6 +77,7 @@ class C3_DATA:
   MASK_ON_MAG_EVEN_LOGMAG = None
   LOG_NORM_MAX = 6
   LOG_NORM_MIN = -3
+  LOG_BIAS = 0.5
   MAG_NORM_MAX = 1e6
   MAG_NORM_MIN = 0
 
@@ -93,7 +95,6 @@ class C3_DATA:
   # TFRECORDS_DIR = '/all_data/feature_tfrecords' # for docker
   TFRECORDS_DIR = '/home/room/work/lhf/alldata/irm_data/feature_tfrecords_utt03s_irm'
 
-
 class C6_NNET:
   MASK_TYPE = "IRM"  # or 'PSIRM'
   LOSS_FUNC = loss.reduce_sum_frame_batchsize_MSE_LOW_FS_IMPROVE # "MSE" "MSE_LOW_FS_IMPROVE"
@@ -107,6 +108,7 @@ class C6_NNET:
   RNN_LAYER = 2
   CLIP_NORM = 5.0
   SAVE_DIR = 'exp/rnn_irm'
+  CHECK_POINT = 'nnet'
   '''
   decode:
     decode by the flod '_decode_index'. one set per (.list) file.
@@ -201,6 +203,7 @@ class C7_NNET:
   RNN_LAYER = 2
   CLIP_NORM = 5.0
   SAVE_DIR = 'exp/rnn_irm'
+  CHECK_POINT = 'nnet'
   '''
   decode:
     decode by the flod '_decode_index'. one set per (.list) file.
@@ -300,6 +303,7 @@ class C8_NNET:
   RNN_LAYER = 2
   CLIP_NORM = 5.0
   SAVE_DIR = 'exp/rnn_irm'
+  CHECK_POINT = 'nnet_C8'
   '''
   decode:
     decode by the flod '_decode_index'. one set per (.list) file.
@@ -399,6 +403,7 @@ class C9_NNET:
   RNN_LAYER = 2
   CLIP_NORM = 5.0
   SAVE_DIR = 'exp/rnn_irm'
+  CHECK_POINT = 'nnet'
   '''
   decode:
     decode by the flod '_decode_index'. one set per (.list) file.
@@ -490,6 +495,7 @@ class C10_NNET:
   RNN_LAYER = 2
   CLIP_NORM = 5.0
   SAVE_DIR = 'exp/rnn_irm'
+  CHECK_POINT = 'nnet'
   '''
   decode:
     decode by the flod '_decode_index'. one set per (.list) file.
@@ -578,13 +584,14 @@ class C11_NNET:
   RNN_LAYER = 2
   CLIP_NORM = 5.0
   SAVE_DIR = 'exp/rnn_irm'
+  CHECK_POINT = 'nnet_C11_bias50'
   '''
   decode:
-    decode by the flod '_decode_index'. one set per (.list) file.
+    decode by the fold '_decode_index'. one set per (.list) file.
   '''
   decode = 1  # 0:train; 1:decode_for_show; 2:decode_test_set_calculate_SDR_Improvement
 
-  batch_size = 128
+  batch_size =4
   learning_rate = 0.001
   start_halving_impr = 0.0003
   resume_training = 'false'
@@ -638,10 +645,10 @@ class C11_DATA:
   OVERLAP = NFFT - 256
   FS = 16000
   FEATURE_TYPE = 'LOG_MAG'  # MAG or LOG_MAG
-  MASK_ON_MAG_EVEN_LOGMAG = None
+  MASK_ON_MAG_EVEN_LOGMAG = True
   LOG_NORM_MAX = 6
   LOG_NORM_MIN = -0.3
-  LOG_BIAS = 50
+  LOG_BIAS = 10000
   MAG_NORM_MAX = 1e6
   MAG_NORM_MIN = 0
 
@@ -659,5 +666,5 @@ class C11_DATA:
   # TFRECORDS_DIR = '/all_data/feature_tfrecords' # for docker
   TFRECORDS_DIR = '/home/room/work/lhf/alldata/irm_data/feature_tfrecords_utt03s_irm'
 
-NNET_PARAM = C9_NNET
-MIXED_AISHELL_PARAM = C9_DATA
+NNET_PARAM = C11_NNET
+MIXED_AISHELL_PARAM = C11_DATA
