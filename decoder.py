@@ -76,7 +76,7 @@ def decode_one_wav(sess, model, wavedata):
   if NNET_PARAM.decode_output_speaker_volume_amp:  # norm resotred wave
     reY = reY/np.max(np.abs(reY))*32767
 
-  return reY, mask
+  return np.array(reY), mask
 
 if __name__=='__main__':
   f1 = wave.open('jjyykk.wav', 'rb')
