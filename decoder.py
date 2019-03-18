@@ -76,20 +76,20 @@ def decode_one_wav(sess, model, wavedata):
   if NNET_PARAM.decode_output_speaker_volume_amp:  # norm resotred wave
     reY = reY/np.max(np.abs(reY))*32767
 
-  return reY
+  return reY, mask
 
 if __name__=='__main__':
-  f1 = wave.open('_decode_index/speech0_16k.wav', 'rb')
+  f1 = wave.open('jjyykk.wav', 'rb')
   waveData = np.fromstring(f1.readframes(f1.getnframes()),
                            dtype=np.int16)
   f1.close()
   waveData=waveData*1.0
 
-  sess, model = build_session()
-  reY = decode_one_wav(sess,model,waveData)#
+  sess, model = build_session(ckpt_dir="nnet_C11_bias50")
+  reY,_ = decode_one_wav(sess,model,waveData)#
   framerate = MIXED_AISHELL_PARAM.FS
   bits = 16
-  utils.audio_tool.write_audio('restore_audio.wav',
+  utils.audio_tool.write_audio('jjyykk_en.wav',
                                reY,
                                framerate,
                                bits, 'wav')
