@@ -1,4 +1,5 @@
 import soundfile
+from mir_eval.separation import bss_eval_sources
 import numpy as np
 
 '''
@@ -19,3 +20,15 @@ def write_audio(file, data, sr, bits, _format, norm=True):
   data_t = data/(np.power(2, bits-1)-1) if norm else data
   # -1.0 < data < 1.0, data.type=float
   return soundfile.write(file, data_t, sr, subtype=subtype, format=_format)
+
+def cal_SDR(src_ref, src_deg):
+    """Calculate Source-to-Distortion Ratio(SDR).
+    NOTE: bss_eval_sources is very very slow.
+    Args:
+        src_ref: numpy.ndarray, [C, T]
+        src_deg: numpy.ndarray, [C, T], reordered by best PIT permutation
+    Returns:
+        SDR
+    """
+    sdr, sir, sar, popt = bss_eval_sources(src_ref, src_deg)
+    return sdr
