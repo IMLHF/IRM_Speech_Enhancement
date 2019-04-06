@@ -403,14 +403,14 @@ class C9_NNET:
   RNN_LAYER = 2
   CLIP_NORM = 5.0
   SAVE_DIR = 'exp/rnn_irm'
-  CHECK_POINT = 'nnet'
+  CHECK_POINT = 'nnet_C9-2'
   '''
   decode:
     decode by the flod '_decode_index'. one set per (.list) file.
   '''
   decode = 1  # 0:train; 1:decode_for_show; 2:decode_test_set_calculate_SDR_Improvement
 
-  batch_size = 128
+  batch_size = 4
   learning_rate = 0.001
   start_halving_impr = 0.0003
   resume_training = 'false'
