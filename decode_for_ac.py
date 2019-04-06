@@ -70,7 +70,8 @@ def en_speech(noise_dir_name, speech_dir_name, name, snr):
                samplerate=sr_n,
                subtype='PCM_16',
                format='wav')
-      enhanced_wave, mask = decode_one_wav(sess, model_, mixed_wave*32767)/32767
+      enhanced_wave, mask = decode_one_wav(sess, model_, mixed_wave*32767)
+      enhanced_wave /= 32767
       sf.write(os.path.join(enhanced_waves_dir, speech_name+'_MIX_'+noise_name+'_enhanced.wav'),
                enhanced_wave,
                samplerate=sr_n,
