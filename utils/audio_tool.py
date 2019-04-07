@@ -1,6 +1,9 @@
-import soundfile
+import soundfile as sf
 from mir_eval.separation import bss_eval_sources
 import numpy as np
+import FLAGS
+import librosa
+AMP_MAX = (2 ** (FLAGS.MIXED_AISHELL_PARAM.AUDIO_BITS - 1) - 1)
 
 '''
 soundfile.info(file, verbose=False)
@@ -11,15 +14,18 @@ soundfile.write(file, data, samplerate, subtype=None, endian=None, format=None, 
 '''
 
 
-def write_audio(file, data, sr, bits, _format, norm=True):
-  subtype = {
-      8: 'PCM_S8',
-      16: 'PCM_16',
-      24: 'PCM_24'
-  }[bits]
-  data_t = data/(np.power(2, bits-1)-1) if norm else data
-  # -1.0 < data < 1.0, data.type=float
-  return soundfile.write(file, data_t, sr, subtype=subtype, format=_format)
+def read_audio(file):
+  data, sr = sf.read(file)
+  if sr != FLAGS.MIXED_AISHELL_PARAM.FS:
+    data = librosa.resample(data, sr, FLAGS.MIXED_AISHELL_PARAM.FS, res_type='kaiser_fast')
+    print('resample wav(%d to %d) :' % (sr, FLAGS.MIXED_AISHELL_PARAM.FS), file)
+    # librosa.output.write_wav(file, data, FLAGS.PARAM.FS)
+  return data*AMP_MAX, FLAGS.PARAM.FS
+
+
+def write_audio(file, data, sr):
+  return sf.write(file, data/AMP_MAX, sr)
+
 
 def cal_SDR(src_ref, src_deg):
     """Calculate Source-to-Distortion Ratio(SDR).

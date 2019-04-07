@@ -250,7 +250,7 @@ def _extract_feature_x_y_xtheta_ytheta(utt_dir1, utt_dir2):
   # name1 = utt_dir1[utt_dir1.rfind('/')+1:utt_dir1.rfind('.')]
   # name2 = utt_dir2[utt_dir2.rfind('/')+1:]
   # utils.audio_tool.write_audio('mixwave/mixed_'+name1+"_"+name2,
-  #                              mixedData,16000,16,'wav')
+  #                              mixedData,16000)
 
   X = _extract_norm_log_mag_spec(mixedData)
   Y = _extract_norm_log_mag_spec(waveData1)

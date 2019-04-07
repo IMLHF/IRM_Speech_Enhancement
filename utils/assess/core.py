@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 """
-@author: PengChuan
 这一部分是语音信号的评价指标，用来评估语音信号降噪的质量，判断结果好坏
     pesq：perceptual evaluation of speech quality，语音质量听觉评估
     stoi：short time objective intelligibility，短时客观可懂度，尤其在低SNR下，可懂度尤其重要
@@ -50,12 +49,12 @@ def calc_pesq(ref_sig, deg_sig, samplerate, is_file=False):
         output = os.popen('%s +%d %s %s' % (PESQ_PATH, samplerate, ref_sig, deg_sig))
         msg = output.read()
     else:
-        tmp_ref = tempfile.NamedTemporaryFile(suffix='.wav', delete=True)
+        tmp_ref = tempfile.NamedTemporaryFile(suffix='.wav', delete=False)
         tmp_deg = tempfile.NamedTemporaryFile(suffix='.wav', delete=True)
         # librosa.output.write_wav(tmp_ref.name, ref_sig, samplerate)
         # librosa.output.write_wav(tmp_deg.name, deg_sig, samplerate)
-        sf.write(tmp_ref.name,ref_sig,samplerate)
-        sf.write(tmp_deg.name,deg_sig,samplerate)
+        audio_tool.write_audio(tmp_ref.name,ref_sig,samplerate)
+        audio_tool.write_audio(tmp_deg.name,deg_sig,samplerate)
         output = os.popen('%s +%d %s %s' % (PESQ_PATH, samplerate, tmp_ref.name, tmp_deg.name))
         msg = output.read()
         # print(msg)
