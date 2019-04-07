@@ -20,7 +20,7 @@ def read_audio(file):
     data = librosa.resample(data, sr, FLAGS.MIXED_AISHELL_PARAM.FS, res_type='kaiser_fast')
     print('resample wav(%d to %d) :' % (sr, FLAGS.MIXED_AISHELL_PARAM.FS), file)
     # librosa.output.write_wav(file, data, FLAGS.PARAM.FS)
-  return data*AMP_MAX, FLAGS.PARAM.FS
+  return data*AMP_MAX, FLAGS.MIXED_AISHELL_PARAM.FS
 
 
 def write_audio(file, data, sr):
