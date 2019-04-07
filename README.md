@@ -36,14 +36,9 @@
 
 
 ## 如何使用
-### 降噪系统输入和输出（数据准备）
-网络根据_decode_index目录下的list文件读入语音文件进行降噪。
+train: run_irm.py
+decode/test: decoder.py
 
-可以使用两种读入方式，第一种方式一般用于实际使用，该方式直接读入带噪语音并产生降噪结果；第二种方式一般用于测试，该方式，分别读入纯净的语音和噪音，将其混合后进行降噪的测试。
-
-方式一：从_decode_index目录中的list文件中读取纯净语音的路径和噪音路径，list文件的每行表示一条数据（每行分别是一条纯净语音的路径和一条噪音的路径，中间用空格隔开），可以有多条数据，每条语音的长度不要求相等。之后会在exp/rnn_irm/decode_ans目录中生成一个跟list文件同名的文件夹，并将降噪结果保存在该目录。例如从_decode_index/speech_noise_test.list中读取要降噪的语音列表，之后会生成exp/rnn_irm/decode_ans/speech_noise_test目录，同时在该目录生成降噪结果。
-
-方式二：类似于第一种方式，仍然从_decode_index目录中读取待降噪的数据，list文件中每一行表示一条数据，只需将第一种方式中噪音文件的路径替换为None即可（每行分别是带噪语音的路径和"None")。例如从_decode_index/single_mix_test.list中读取要降噪的语音列表，之后会生成exp/rnn_irm/decode_ans/single_mix_test目录，同时生成降噪结果。
 
 ### 启动（运行，生成结果）
 终端执行"python3 run_irm.py gpu_id"即可，gpu_id为解码使用的gpu编号。
