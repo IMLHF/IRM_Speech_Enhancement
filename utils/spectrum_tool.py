@@ -8,19 +8,17 @@ import matplotlib.pyplot as plt
 
 
 def picture_spec(spec, name):
-  # for i in range(np.shape(spec)[0]):
-    # spec_t=spec[i]
-  spec_t = spec
-  # print(np.shape(spec_t),name)
-  plt.figure(figsize=(5, 12))
+  '''
+  spec:[time,fft_dot]
+  '''
+  spec_t = spec.T
+  plt.figure(figsize=(12, 5))
   plt.pcolormesh(spec_t)
-  # la.display.specshow()
   plt.title('STFT Magnitude')
-  plt.xlabel('Frequency')
-  plt.ylabel('Time')
+  plt.xlabel('Time')
+  plt.ylabel('Frequency')
   plt.savefig(name+".jpg")
   print("write pic "+name)
-  # plt.show()
   plt.close()
 
 
