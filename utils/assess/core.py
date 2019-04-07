@@ -49,7 +49,7 @@ def calc_pesq(ref_sig, deg_sig, samplerate, is_file=False):
         output = os.popen('%s +%d %s %s' % (PESQ_PATH, samplerate, ref_sig, deg_sig))
         msg = output.read()
     else:
-        tmp_ref = tempfile.NamedTemporaryFile(suffix='.wav', delete=False)
+        tmp_ref = tempfile.NamedTemporaryFile(suffix='.wav', delete=True)
         tmp_deg = tempfile.NamedTemporaryFile(suffix='.wav', delete=True)
         # librosa.output.write_wav(tmp_ref.name, ref_sig, samplerate)
         # librosa.output.write_wav(tmp_deg.name, deg_sig, samplerate)
